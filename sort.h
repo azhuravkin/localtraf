@@ -1,6 +1,6 @@
 #ifndef SORT_H
 #define SORT_H
 
-void sort(struct host **, const int, struct options *);
+void sort(void);
 
 #endif
