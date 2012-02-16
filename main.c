@@ -80,7 +80,6 @@ int main(int argc, char **argv) {
     }
 
     if (opts.port) {
-#if 1
 	/* Goto background. */
 	if (fork())
 	    exit(EXIT_SUCCESS);
@@ -92,7 +91,7 @@ int main(int argc, char **argv) {
 	iostream = open(_PATH_DEVNULL, O_RDWR);
 	dup(iostream);
 	dup(iostream);
-#endif
+
 	start_daemon();
     } else
 	show_display();
