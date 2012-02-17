@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -pthread -ggdb
+CFLAGS = -Wall -pthread
 LIBS = -lpanel -lncursesw -lpcap
 OBJECTS = main.o display.o pcap.o sort.o http.o
 TARGET = localtraf
