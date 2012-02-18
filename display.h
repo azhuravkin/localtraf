@@ -12,8 +12,8 @@
 
 struct host {
     time_t	timestamp;
-    char	visible_ip[23];
-    char	visible_name[64];
+    char	ip_str[23];
+    char	ip_ptr[64];
     u_int32_t	ip_big;
     u_int32_t	ip_little;
     u_int32_t	in_packets;

@@ -122,8 +122,8 @@ static void *reply(void *arg) {
 	    "<td class='data2'>%sb/s</td>"
 	    "<td class='data2'>%sb/s</td>\n</tr>\n",
 	    ++i,
-	    cur->visible_ip,
-	    (cur->visible_name[0]) ? cur->visible_name : "&nbsp;",
+	    cur->ip_str,
+	    (cur->ip_ptr[0]) ? cur->ip_ptr : "&nbsp;",
 	    in_packets,
 	    out_packets,
 	    in_bytes,
