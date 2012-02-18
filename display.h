@@ -24,6 +24,8 @@ struct host {
     u_int32_t	out_bytes_prev;
     u_int32_t	in_rates;
     u_int32_t	out_rates;
+    int		peers_num;
+    struct host	*peers;
     struct host	*next;
 };
 

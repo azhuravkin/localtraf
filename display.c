@@ -64,20 +64,16 @@ static void sort_window(void) {
     erase();
 }
 
-static void free_list(void) {
+static void free_list(struct host **h, int *num) {
     struct host *cur, *next;
 
-    pthread_mutex_lock(&list_lock);
-
-    for (cur = head; cur; cur = next) {
+    for (cur = *h; cur; cur = next) {
 	next = cur->next;
 	free(cur);
     }
 
-    head = NULL;
-    hosts_num = 0;
-
-    pthread_mutex_unlock(&list_lock);
+    *h = NULL;
+    *num = 0;
 }
 
 void div_1000(char *dst, size_t size, u_int32_t packets) {
@@ -120,29 +116,25 @@ static void resolve_all_hosts(void) {
 static void update_rates(time_t passed) {
     struct host *cur;
 
-    pthread_mutex_lock(&list_lock);
-
     for (cur = head; cur; cur = cur->next) {
 	cur->in_rates = ((cur->in_bytes - cur->in_bytes_prev) * 8) / passed;
 	cur->out_rates = ((cur->out_bytes - cur->out_bytes_prev) * 8) / passed;
 	cur->in_bytes_prev = cur->in_bytes;
 	cur->out_bytes_prev = cur->out_bytes;
     }
-
-    pthread_mutex_unlock(&list_lock);
 }
 
-static void update_counts(u_int32_t ip, const struct pcap_pkthdr *header, int direction) {
+static struct host *update_counts(struct host **h, int *num, u_int32_t ip, const struct pcap_pkthdr *header, int direction) {
     struct host *prev, *cur;
 
     /* Skip 0.0.0.0 and 255.255.255.255 addresses. */
     if (ip == 0 || ip == ~0)
-	return;
+	return NULL;
 
     pthread_mutex_lock(&list_lock);
 
     /* Search host in list. */
-    for (cur = head; cur; cur = cur->next) {
+    for (cur = *h; cur; cur = cur->next) {
 	if (cur->ip_big == ip) {
 	    cur->timestamp = header->ts.tv_sec;
 
@@ -159,7 +151,7 @@ static void update_counts(u_int32_t ip, const struct pcap_pkthdr *header, int di
 
 	    pthread_mutex_unlock(&list_lock);
 
-	    return;
+	    return cur;
 	}
 	prev = cur;
     }
@@ -177,25 +169,27 @@ static void update_counts(u_int32_t ip, const struct pcap_pkthdr *header, int di
 
     switch (direction) {
 	case PCAP_D_IN:
-	    cur->out_bytes = header->len;
+	    cur->out_bytes += header->len;
 	    cur->out_packets++;
 	    break;
 	case PCAP_D_OUT:
-	    cur->in_bytes = header->len;
+	    cur->in_bytes += header->len;
 	    cur->in_packets++;
 	    break;
     }
 
-    if (head == NULL)
-	head = cur;
+    if (*h == NULL)
+	*h = cur;
     else
 	prev->next = cur;
 
-    hosts_num++;
+    (*num)++;
 
-    sort();
+    sort(h, *num);
 
     pthread_mutex_unlock(&list_lock);
+
+    return cur;
 }
 
 static void update_display(void) {
@@ -285,7 +279,7 @@ static void update_display(void) {
     pthread_mutex_unlock(&list_lock);
 }
 
-static void delete_inactive(void) {
+static void delete_inactive(struct host **h, int *num) {
     struct host *cur, *next;
     struct host *prev = NULL;
     struct timeval tv;
@@ -293,36 +287,43 @@ static void delete_inactive(void) {
     /* Get current timestamp. */
     gettimeofday(&tv, NULL);
 
-    for (cur = head; cur; cur = next) {
+    for (cur = *h; cur; cur = next) {
 	next = cur->next;
 	/* Delete hosts which were not updated more than 60 seconds. */
 	if (cur->timestamp + 60 < tv.tv_sec) {
 	    if (prev)
 		prev->next = cur->next;
 	    else
-		head = cur->next;
+		*h = cur->next;
+	    free_list(&cur->peers, &cur->peers_num);
 	    free(cur);
-	    hosts_num--;
-	} else
+	    (*num)--;
+	} else {
+	    delete_inactive(&cur->peers, &cur->peers_num);
 	    prev = cur;
+	}
     }
 
-    sort();
-
-    pthread_mutex_unlock(&list_lock);
+    sort(h, *num);
 }
 
 static void process_packet_in(u_char *param, const struct pcap_pkthdr *header, const u_char *pkt_data) {
+    struct host *cur;
     struct iphdr *ip = (struct iphdr *) (pkt_data + opts.header_len);
     time_t passed = header->ts.tv_sec - rates_update;
 
-    update_counts(ip->saddr, header, PCAP_D_IN);
+    cur = update_counts(&head, &hosts_num, ip->saddr, header, PCAP_D_IN);
+    update_counts(&cur->peers, &cur->peers_num, ip->daddr, header, PCAP_D_OUT);
 
     if (passed >= 5) {
+	pthread_mutex_lock(&list_lock);
+
 	rates_update = header->ts.tv_sec;
 	update_rates(passed);
-	delete_inactive();
+	delete_inactive(&head, &hosts_num);
 	erase();
+
+	pthread_mutex_unlock(&list_lock);
     }
 
     if (!opts.port && timergrow(header->ts, last_update_in, 0.1)) {
@@ -332,16 +333,22 @@ static void process_packet_in(u_char *param, const struct pcap_pkthdr *header, c
 }
 
 static void process_packet_out(u_char *param, const struct pcap_pkthdr *header, const u_char *pkt_data) {
+    struct host *cur;
     struct iphdr *ip = (struct iphdr *) (pkt_data + opts.header_len);
     time_t passed = header->ts.tv_sec - rates_update;
 
-    update_counts(ip->daddr, header, PCAP_D_OUT);
+    cur = update_counts(&head, &hosts_num, ip->daddr, header, PCAP_D_OUT);
+    update_counts(&cur->peers, &cur->peers_num, ip->saddr, header, PCAP_D_IN);
 
     if (passed >= 5) {
+	pthread_mutex_lock(&list_lock);
+
 	rates_update = header->ts.tv_sec;
 	update_rates(passed);
-	delete_inactive();
+	delete_inactive(&head, &hosts_num);
 	erase();
+
+	pthread_mutex_unlock(&list_lock);
     }
 
     if (!opts.port && timergrow(header->ts, last_update_out, 0.1)) {
@@ -373,7 +380,11 @@ static void threads_cancel(void) {
     pthread_cancel(pcap_thr_in);
     pthread_cancel(pcap_thr_out);
 
-    free_list();
+    pthread_mutex_lock(&list_lock);
+
+    free_list(&head, &hosts_num);
+
+    pthread_mutex_unlock(&list_lock);
 }
 
 void show_display(void) {
@@ -476,7 +487,7 @@ void show_display(void) {
 		    update_display();
 		} while (sort_num < '1' || sort_num > '8');
 		pthread_mutex_lock(&list_lock);
-		sort();
+		sort(&head, hosts_num);
 		pthread_mutex_unlock(&list_lock);
 		update_display();
 		break;

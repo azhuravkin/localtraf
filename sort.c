@@ -83,22 +83,22 @@ static int out_rates(const void *p1, const void *p2) {
 static int (*cmp[])(const void *, const void *) =
     { NULL, ip, hostname, in_packets, out_packets, in_bytes, out_bytes, in_rates, out_rates };
 
-void sort() {
-    struct host *arr[hosts_num];
+void sort(struct host **h, const int num) {
+    struct host *arr[num];
     struct host *cur;
     int i = 0;
 
-    if (hosts_num < 2)
+    if (num < 2)
 	return;
 
-    for (cur = head; cur; cur = cur->next)
+    for (cur = *h; cur; cur = cur->next)
 	arr[i++] = cur;
 
-    qsort(arr, hosts_num, sizeof(struct host *), cmp[sort_num - 48]); /* convert char number to int */
+    qsort(arr, num, sizeof(struct host *), cmp[sort_num - 48]); /* convert char number to int */
 
-    head = arr[0];
+    *h = arr[0];
 
-    for (i = 0; i < hosts_num - 1; i++)
+    for (i = 0; i < num - 1; i++)
 	arr[i]->next = arr[i + 1];
 
     arr[i]->next = NULL;
