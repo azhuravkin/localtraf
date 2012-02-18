@@ -307,8 +307,6 @@ static void delete_inactive(void) {
 	    prev = cur;
     }
 
-    sort();
-
     pthread_mutex_unlock(&list_lock);
 }
 
