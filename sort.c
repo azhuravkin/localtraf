@@ -17,7 +17,7 @@ static int hostname(const void *p1, const void *p2) {
     const struct host **e1 = (const struct host **) p1;
     const struct host **e2 = (const struct host **) p2;
 
-    return strcmp((*e1)->visible_name, (*e2)->visible_name);
+    return strcmp((*e1)->ip_ptr, (*e2)->ip_ptr);
 }
 
 static int in_packets(const void *p1, const void *p2) {

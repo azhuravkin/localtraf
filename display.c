@@ -101,8 +101,8 @@ static void iptostr(char *dst, u_int32_t ip) {
 static void resolve_host(struct host *cur) {
     struct hostent *he;
 
-    if (!cur->visible_name[0] && (he = gethostbyaddr(&cur->ip_big, 4, AF_INET)))
-	snprintf(cur->visible_name, sizeof(cur->visible_name), "%s", he->h_name);
+    if (!cur->ip_str[0] && (he = gethostbyaddr(&cur->ip_big, 4, AF_INET)))
+	snprintf(cur->ip_str, sizeof(cur->ip_str), "%s", he->h_name);
 }
 
 static void resolve_all_hosts(void) {
@@ -162,7 +162,7 @@ static struct host *update_counts(struct host **h, int *num, u_int32_t ip, const
     cur->timestamp = header->ts.tv_sec;
     cur->ip_big = ip;
     cur->ip_little = ntohl(ip);
-    iptostr(cur->visible_ip, ip);
+    iptostr(cur->ip_str, ip);
 
     if (opts.resolve)
 	resolve_host(cur);
@@ -231,7 +231,7 @@ static void update_display(void) {
 	    div_1000(out_rates, sizeof(out_rates), cur->out_rates);
 
 	    mvprintw(line++, 0, "%-*.*s %*s %*s %*s %*s %*sb/s %*sb/s\n",
-		21 + s1, 21 + s1, (opts.resolve && cur->visible_name[0]) ? cur->visible_name : cur->visible_ip,
+		21 + s1, 21 + s1, (opts.resolve && cur->ip_ptr[0]) ? cur->ip_ptr : cur->ip_str,
 		7 + s2, in_packets,
 		7 + s2, out_packets,
 		7 + s2, in_bytes,
