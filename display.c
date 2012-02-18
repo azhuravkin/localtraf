@@ -303,8 +303,6 @@ static void delete_inactive(struct host **h, int *num) {
 	    prev = cur;
 	}
     }
-
-    sort(h, *num);
 }
 
 static void process_packet_in(u_char *param, const struct pcap_pkthdr *header, const u_char *pkt_data) {
