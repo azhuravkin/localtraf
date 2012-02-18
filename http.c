@@ -100,7 +100,7 @@ static void *reply(void *arg) {
 
     if (sort_number > '0' && sort_number < '9') {
 	sort_num = sort_number;
-	sort();
+	sort(&head, sort_num);
     }
 
     for (cur = head; cur; cur = cur->next) {
