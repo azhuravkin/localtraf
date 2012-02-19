@@ -293,6 +293,8 @@ static void delete_inactive(void) {
     /* Get current timestamp. */
     gettimeofday(&tv, NULL);
 
+    pthread_mutex_lock(&list_lock);
+
     for (cur = head; cur; cur = next) {
 	next = cur->next;
 	/* Delete hosts which were not updated more than 60 seconds. */
