@@ -279,18 +279,14 @@ static void update_display(void) {
     pthread_mutex_unlock(&list_lock);
 }
 
-static void delete_inactive(struct host **h, int *num) {
+static void delete_inactive(struct host **h, int *num, time_t timestamp) {
     struct host *cur, *next;
     struct host *prev = NULL;
-    struct timeval tv;
-
-    /* Get current timestamp. */
-    gettimeofday(&tv, NULL);
 
     for (cur = *h; cur; cur = next) {
 	next = cur->next;
 	/* Delete hosts which were not updated more than 60 seconds. */
-	if (cur->timestamp + 60 < tv.tv_sec) {
+	if (cur->timestamp + 60 < timestamp) {
 	    if (prev)
 		prev->next = cur->next;
 	    else
@@ -299,7 +295,7 @@ static void delete_inactive(struct host **h, int *num) {
 	    free(cur);
 	    (*num)--;
 	} else {
-	    delete_inactive(&cur->peers, &cur->peers_num);
+	    delete_inactive(&cur->peers, &cur->peers_num, timestamp);
 	    prev = cur;
 	}
     }
@@ -318,7 +314,7 @@ static void process_packet_in(u_char *param, const struct pcap_pkthdr *header, c
 
 	rates_update = header->ts.tv_sec;
 	update_rates(passed);
-	delete_inactive(&head, &hosts_num);
+	delete_inactive(&head, &hosts_num, rates_update);
 	erase();
 
 	pthread_mutex_unlock(&list_lock);
@@ -343,7 +339,7 @@ static void process_packet_out(u_char *param, const struct pcap_pkthdr *header, 
 
 	rates_update = header->ts.tv_sec;
 	update_rates(passed);
-	delete_inactive(&head, &hosts_num);
+	delete_inactive(&head, &hosts_num, rates_update);
 	erase();
 
 	pthread_mutex_unlock(&list_lock);
