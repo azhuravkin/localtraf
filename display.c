@@ -101,8 +101,8 @@ static void iptostr(char *dst, u_int32_t ip) {
 static void resolve_host(struct host *cur) {
     struct hostent *he;
 
-    if (!cur->ip_str[0] && (he = gethostbyaddr(&cur->ip_big, 4, AF_INET)))
-	snprintf(cur->ip_str, sizeof(cur->ip_str), "%s", he->h_name);
+    if (!cur->ip_ptr[0] && (he = gethostbyaddr(&cur->ip_big, 4, AF_INET)))
+	snprintf(cur->ip_ptr, sizeof(cur->ip_ptr), "%s", he->h_name);
 }
 
 static void resolve_all_hosts(void) {
