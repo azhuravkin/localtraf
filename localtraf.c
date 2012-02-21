@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <getopt.h>
 #include <locale.h>
+#include <string.h>
 #include "localtraf.h"
 #include "display.h"
 
@@ -10,14 +11,11 @@ static void usage(const char *name)
     fprintf(stderr,
 	"Usage: %s [Options] [interface]\n"
 	"Options:\n"
-	"  -b, --kbytes           show rate in kilobytes per second\n"
-	"  -f, --filter <string>  filter expression; see tcpdump(1) for syntax\n"
 	"  -h, --help             show this (help) message\n"
 	"  -m, --mac              show mac address\n"
 	"  -n, --no-color         disable color mode\n"
+	"  -o, --outfile <string> write output to <string> file\n"
 	"  -r, --resolve          resolve hostnames\n"
-	"  -P, --purge <num>      set the expired data purge-period to <num> seconds [60]\n"
-	"  -R, --refresh <num>    set the refresh-period to <num> seconds [1]\n"
 	"      interface          listen on <interface>\n", name);
     exit(EXIT_FAILURE);
 }
@@ -27,7 +25,6 @@ int main(int argc, char **argv)
     struct options opts;
     struct bpf_program fp;
     char errbuf[PCAP_ERRBUF_SIZE];
-    char filter[128] = "ip";
     int opt;
 
     if (getuid()) {
@@ -37,65 +34,41 @@ int main(int argc, char **argv)
 
     setlocale(LC_ALL, "");
 
-    opts.refresh_time = 1;
-    opts.purge_time = 60;
     opts.color = TRUE;
     opts.mac = FALSE;
-    opts.kbytes = FALSE;
     opts.resolve = FALSE;
+    opts.outfile = NULL;
+    opts.fp = NULL;
+    opts.sort = 5;
 
     struct option longopts[] = {
-	{"kbytes",   0, 0, 'b'},
-	{"filter",   1, 0, 'f'},
 	{"help",     0, 0, 'h'},
 	{"mac",      0, 0, 'm'},
 	{"no-color", 0, 0, 'n'},
+	{"outfile",  0, 0, 'o'},
 	{"resolve",  0, 0, 'r'},
-	{"purge",    1, 0, 'P'},
-	{"refresh",  1, 0, 'R'},
 	{NULL,       0, 0, '\0'}
     };
 
     /* Parse command line options. */
-    while ((opt = getopt_long(argc, argv, "kf:mnrP:R:", longopts, NULL)) != EOF) {
+    while ((opt = getopt_long(argc, argv, "hmno:r", longopts, NULL)) != EOF) {
 	switch (opt) {
-	    case 'k':
-		opts.kbytes = TRUE;
-		break;
-	    case 'f':
-		snprintf(filter, sizeof(filter), "ip and %s", optarg);
-		break;
 	    case 'm':
 		opts.mac = TRUE;
 		break;
 	    case 'n':
 		opts.color = FALSE;
 		break;
+	    case 'o':
+		opts.outfile = strdup(optarg);
+		break;
 	    case 'r':
 		opts.resolve = TRUE;
-		break;
-	    case 'P':
-		opts.purge_time = atoi(optarg);
-		break;
-	    case 'R':
-		opts.refresh_time = atoi(optarg);
 		break;
 	    default:
 		usage(argv[0]);
 		break;
 	}
-    }
-
-/*    if (opts.refresh_time < 1) {
-	fprintf(stderr, "Refresh Time (%d sec) must be one or more seconds.\n",
-		opts.refresh_time);
-	exit(EXIT_FAILURE);
-    }
-*/
-    if (opts.purge_time < opts.refresh_time) {
-	fprintf(stderr, "Refresh Time (%d second) must be less than Purge Time (%d second).\n",
-		opts.refresh_time, opts.purge_time);
-	exit(EXIT_FAILURE);
     }
 
     if (optind < argc) {
@@ -127,19 +100,22 @@ int main(int argc, char **argv)
     }
 
     /* Compile the filter expression. */
-    if (pcap_compile(opts.handle, &fp, filter, 0, opts.mask) == -1) {
-	fprintf(stderr, "Couldn't parse filter %s: %s\n", filter, pcap_geterr(opts.handle));
+    if (pcap_compile(opts.handle, &fp, "ip", 0, opts.mask) == EOF) {
+	fprintf(stderr, "Couldn't compile filter: %s\n", pcap_geterr(opts.handle));
 	exit(EXIT_FAILURE);
     }
 
     /* Apply the compiled filter. */
-    if (pcap_setfilter(opts.handle, &fp) == -1) {
-	fprintf(stderr, "Couldn't install filter %s: %s\n", filter, pcap_geterr(opts.handle));
+    if (pcap_setfilter(opts.handle, &fp) == EOF) {
+	fprintf(stderr, "Couldn't install filter: %s\n", pcap_geterr(opts.handle));
 	exit(EXIT_FAILURE);
     }
 
-    /* Show display. */
-    display(&opts);
+    /* Start pcap */
+    if (opts.outfile)
+	start_daemon(&opts);
+    else
+	show_display(&opts);
 
     return 0;
 }

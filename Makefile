@@ -8,7 +8,7 @@ all: $(TARGET)
 
 localtraf: Makefile $(OBJECTS)
 	$(CC) $(CFLAGS) -o $(TARGET) $(OBJECTS) $(LIBS)
-	strip -s $(TARGET)
+#	strip -s $(TARGET)
 
 localtraf.o: Makefile localtraf.h display.h localtraf.c
 	$(CC) $(CFLAGS) -c localtraf.c
