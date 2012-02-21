@@ -1,7 +1,7 @@
 Summary: A console-based network monitoring utility.
 Name: localtraf
 Version: 1.0
-Release: 1%{?dist}
+Release: 2%{?dist}
 Source: %{name}-%{version}.tar.gz
 License: GPL
 Group: Applications/System

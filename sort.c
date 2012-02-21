@@ -1,3 +1,4 @@
+#include <string.h>
 #include "localtraf.h"
 #include "sort.h"
 
@@ -6,12 +7,15 @@ static int ip(const void *p1, const void *p2)
     const struct host **e1 = (const struct host **) p1;
     const struct host **e2 = (const struct host **) p2;
 
-    if ((*e1)->ip < (*e2)->ip)
-	return -1;
-    if ((*e1)->ip > (*e2)->ip)
-	return 1;
+    return ((*e1)->ip - (*e2)->ip);
+}
 
-    return 0;
+static int resolve(const void *p1, const void *p2)
+{
+    const struct host **e1 = (const struct host **) p1;
+    const struct host **e2 = (const struct host **) p2;
+
+    return strcmp((*e1)->visible_name, (*e2)->visible_name);
 }
 
 static int in_packets(const void *p1, const void *p2)
@@ -19,12 +23,7 @@ static int in_packets(const void *p1, const void *p2)
     const struct host **e1 = (const struct host **) p1;
     const struct host **e2 = (const struct host **) p2;
 
-    if ((*e1)->in_packets > (*e2)->in_packets)
-	return -1;
-    if ((*e1)->in_packets < (*e2)->in_packets)
-	return 1;
-
-    return 0;
+    return ((*e2)->in_packets - (*e1)->in_packets);
 }
 
 static int out_packets(const void *p1, const void *p2)
@@ -32,12 +31,7 @@ static int out_packets(const void *p1, const void *p2)
     const struct host **e1 = (const struct host **) p1;
     const struct host **e2 = (const struct host **) p2;
 
-    if ((*e1)->out_packets > (*e2)->out_packets)
-	return -1;
-    if ((*e1)->out_packets < (*e2)->out_packets)
-	return 1;
-
-    return 0;
+    return ((*e2)->out_packets - (*e1)->out_packets);
 }
 
 static int in_bytes(const void *p1, const void *p2)
@@ -45,12 +39,7 @@ static int in_bytes(const void *p1, const void *p2)
     const struct host **e1 = (const struct host **) p1;
     const struct host **e2 = (const struct host **) p2;
 
-    if ((*e1)->in_bytes > (*e2)->in_bytes)
-	return -1;
-    if ((*e1)->in_bytes < (*e2)->in_bytes)
-	return 1;
-
-    return 0;
+    return ((*e2)->in_bytes - (*e1)->in_bytes);
 }
 
 static int out_bytes(const void *p1, const void *p2)
@@ -58,12 +47,7 @@ static int out_bytes(const void *p1, const void *p2)
     const struct host **e1 = (const struct host **) p1;
     const struct host **e2 = (const struct host **) p2;
 
-    if ((*e1)->out_bytes > (*e2)->out_bytes)
-	return -1;
-    if ((*e1)->out_bytes < (*e2)->out_bytes)
-	return 1;
-
-    return 0;
+    return ((*e2)->out_bytes - (*e1)->out_bytes);
 }
 
 static int in_rates(const void *p1, const void *p2)
@@ -71,12 +55,7 @@ static int in_rates(const void *p1, const void *p2)
     const struct host **e1 = (const struct host **) p1;
     const struct host **e2 = (const struct host **) p2;
 
-    if ((*e1)->in_rates > (*e2)->in_rates)
-	return -1;
-    if ((*e1)->in_rates < (*e2)->in_rates)
-	return 1;
-
-    return 0;
+    return ((*e2)->in_rates - (*e1)->in_rates);
 }
 
 static int out_rates(const void *p1, const void *p2)
@@ -84,15 +63,8 @@ static int out_rates(const void *p1, const void *p2)
     const struct host **e1 = (const struct host **) p1;
     const struct host **e2 = (const struct host **) p2;
 
-    if ((*e1)->out_rates > (*e2)->out_rates)
-	return -1;
-    if ((*e1)->out_rates < (*e2)->out_rates)
-	return 1;
-
-    return 0;
+    return ((*e2)->out_rates - (*e1)->out_rates);
 }
-
-static int(*cmp[7])(const void *, const void *) = {ip, in_packets, out_packets, in_bytes, out_bytes, in_rates, out_rates};
 
 void sort(struct host **head, const int num, struct options *opts)
 {
@@ -106,7 +78,32 @@ void sort(struct host **head, const int num, struct options *opts)
     for (cur = *head; cur; cur = cur->next)
 	arr[i++] = cur;
 
-    qsort(arr, num, sizeof(struct host *), cmp[opts->sort]);
+    switch (opts->sort) {
+	case '1':
+	    if (opts->resolve)
+		qsort(arr, num, sizeof(struct host *), resolve);
+	    else
+		qsort(arr, num, sizeof(struct host *), ip);
+	    break;
+	case '2':
+	    qsort(arr, num, sizeof(struct host *), in_packets);
+	    break;
+	case '3':
+	    qsort(arr, num, sizeof(struct host *), out_packets);
+	    break;
+	case '4':
+	    qsort(arr, num, sizeof(struct host *), in_bytes);
+	    break;
+	case '5':
+	    qsort(arr, num, sizeof(struct host *), out_bytes);
+	    break;
+	case '6':
+	    qsort(arr, num, sizeof(struct host *), in_rates);
+	    break;
+	case '7':
+	    qsort(arr, num, sizeof(struct host *), out_rates);
+	    break;
+    }
 
     *head = arr[0];
 

@@ -8,8 +8,7 @@
 struct host {
     time_t	timestamp;
     char	visible_ip[23];
-    char	visible_mac[18];
-    char	visible_name[32];
+    char	visible_name[64];
     u_int32_t	ip;
     u_int32_t	in_packets;
     u_int32_t	out_packets;
@@ -23,11 +22,10 @@ struct host {
 };
 
 struct options {
-    pcap_t	*handle;
+    pcap_t	*handle_in;
+    pcap_t	*handle_out;
     char	*dev;
     FILE	*fp;
-    bpf_u_int32	net;
-    bpf_u_int32	mask;
     u_int8_t	color;
     u_int8_t	mac;
     u_int8_t	resolve;

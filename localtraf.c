@@ -12,11 +12,10 @@ static void usage(const char *name)
 	"Usage: %s [Options] [interface]\n"
 	"Options:\n"
 	"  -h, --help             show this (help) message\n"
-	"  -m, --mac              show mac address\n"
 	"  -n, --no-color         disable color mode\n"
 	"  -o, --outfile <string> write output to <string> file\n"
 	"  -r, --resolve          resolve hostnames\n"
-	"      interface          listen on <interface>\n", name);
+	"      <interface>        \"internal\" interface\n", name);
     exit(EXIT_FAILURE);
 }
 
@@ -35,15 +34,13 @@ int main(int argc, char **argv)
     setlocale(LC_ALL, "");
 
     opts.color = TRUE;
-    opts.mac = FALSE;
     opts.resolve = FALSE;
     opts.outfile = NULL;
     opts.fp = NULL;
-    opts.sort = 5;
+    opts.sort = '6';
 
     struct option longopts[] = {
 	{"help",     0, 0, 'h'},
-	{"mac",      0, 0, 'm'},
 	{"no-color", 0, 0, 'n'},
 	{"outfile",  0, 0, 'o'},
 	{"resolve",  0, 0, 'r'},
@@ -51,11 +48,8 @@ int main(int argc, char **argv)
     };
 
     /* Parse command line options. */
-    while ((opt = getopt_long(argc, argv, "hmno:r", longopts, NULL)) != EOF) {
+    while ((opt = getopt_long(argc, argv, "hno:r", longopts, NULL)) != EOF) {
 	switch (opt) {
-	    case 'm':
-		opts.mac = TRUE;
-		break;
 	    case 'n':
 		opts.color = FALSE;
 		break;
@@ -81,33 +75,53 @@ int main(int argc, char **argv)
 	}
     }
 
-    /* Get network number and mask associated with capture device. */
-    if (pcap_lookupnet(opts.dev, &opts.net, &opts.mask, errbuf) == EOF) {
-	fprintf(stderr, "Can't get net and netmask: %s\n", errbuf);
+    /* Open capture device. */
+    if ((opts.handle_in = pcap_open_live(opts.dev, ETH_HLEN + ETH_ZLEN, 0, 0, errbuf)) == NULL) {
+	fprintf(stderr, "Couldn't open device %s first: %s\n", opts.dev, errbuf);
 	exit(EXIT_FAILURE);
     }
 
-    /* Open capture device. */
-    if ((opts.handle = pcap_open_live(opts.dev, ETH_HLEN + ETH_ZLEN, 0, 0, errbuf)) == NULL) {
-	fprintf(stderr, "Couldn't open device %s: %s\n", opts.dev, errbuf);
+    if ((opts.handle_out = pcap_open_live(opts.dev, ETH_HLEN + ETH_ZLEN, 0, 0, errbuf)) == NULL) {
+	fprintf(stderr, "Couldn't open device %s second: %s\n", opts.dev, errbuf);
 	exit(EXIT_FAILURE);
     }
 
     /* Make sure we're capturing on an Ethernet device. */
-    if (pcap_datalink(opts.handle) != DLT_EN10MB) {
+    if (pcap_datalink(opts.handle_in) != DLT_EN10MB) {
 	fprintf(stderr, "%s is not an Ethernet\n", opts.dev);
 	exit(EXIT_FAILURE);
     }
 
     /* Compile the filter expression. */
-    if (pcap_compile(opts.handle, &fp, "ip", 0, opts.mask) == EOF) {
-	fprintf(stderr, "Couldn't compile filter: %s\n", pcap_geterr(opts.handle));
+    if (pcap_compile(opts.handle_in, &fp, "ip", 0, PCAP_NETMASK_UNKNOWN) == EOF) {
+	fprintf(stderr, "Couldn't compile filter first: %s\n", pcap_geterr(opts.handle_in));
+	exit(EXIT_FAILURE);
+    }
+
+    if (pcap_compile(opts.handle_out, &fp, "ip", 0, PCAP_NETMASK_UNKNOWN) == EOF) {
+	fprintf(stderr, "Couldn't compile filter second: %s\n", pcap_geterr(opts.handle_out));
 	exit(EXIT_FAILURE);
     }
 
     /* Apply the compiled filter. */
-    if (pcap_setfilter(opts.handle, &fp) == EOF) {
-	fprintf(stderr, "Couldn't install filter: %s\n", pcap_geterr(opts.handle));
+    if (pcap_setfilter(opts.handle_in, &fp) == EOF) {
+	fprintf(stderr, "Couldn't install filter first: %s\n", pcap_geterr(opts.handle_in));
+	exit(EXIT_FAILURE);
+    }
+
+    if (pcap_setfilter(opts.handle_out, &fp) == EOF) {
+	fprintf(stderr, "Couldn't install filter second: %s\n", pcap_geterr(opts.handle_out));
+	exit(EXIT_FAILURE);
+    }
+
+    /* Set capture direction. */
+    if (pcap_setdirection(opts.handle_in, PCAP_D_IN) == EOF) {
+	fprintf(stderr, "Couldn't set direction first: %s\n", pcap_geterr(opts.handle_in));
+	exit(EXIT_FAILURE);
+    }
+
+    if (pcap_setdirection(opts.handle_out, PCAP_D_OUT) == EOF) {
+	fprintf(stderr, "Couldn't set direction second: %s\n", pcap_geterr(opts.handle_out));
 	exit(EXIT_FAILURE);
     }
 

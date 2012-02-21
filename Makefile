@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -Wall -pthread
-LIBS = -lncursesw -lpcap
+LIBS = -lpanel -lncursesw -lpcap
 OBJECTS = localtraf.o display.o sort.o
 TARGET = localtraf
 
@@ -8,7 +8,7 @@ all: $(TARGET)
 
 localtraf: Makefile $(OBJECTS)
 	$(CC) $(CFLAGS) -o $(TARGET) $(OBJECTS) $(LIBS)
-#	strip -s $(TARGET)
+	strip -s $(TARGET)
 
 localtraf.o: Makefile localtraf.h display.h localtraf.c
 	$(CC) $(CFLAGS) -c localtraf.c
