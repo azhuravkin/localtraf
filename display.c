@@ -295,15 +295,15 @@ static void delete_inactive(struct host **h, int *num, time_t timestamp) {
 }
 
 static void process_packet_in(u_char *param, const struct pcap_pkthdr *header, const u_char *pkt_data) {
-    struct host *cur;
+    struct host *h;
     struct iphdr *ip = (struct iphdr *) (pkt_data + opts.header_len);
 
     pthread_mutex_lock(&list_lock);
 
     time_t passed = header->ts.tv_sec - rates_update;
 
-    cur = update_counts(&head, &hosts_num, ip->saddr, header, PCAP_D_IN);
-    update_counts(&cur->peers, &cur->peers_num, ip->daddr, header, PCAP_D_OUT);
+    h = update_counts(&head, &hosts_num, ip->saddr, header, PCAP_D_IN);
+    update_counts(&h->peers, &h->peers_num, ip->daddr, header, PCAP_D_OUT);
 
     if (passed >= 5) {
 	rates_update = header->ts.tv_sec;
@@ -321,15 +321,15 @@ static void process_packet_in(u_char *param, const struct pcap_pkthdr *header, c
 }
 
 static void process_packet_out(u_char *param, const struct pcap_pkthdr *header, const u_char *pkt_data) {
-    struct host *cur;
+    struct host *h;
     struct iphdr *ip = (struct iphdr *) (pkt_data + opts.header_len);
 
     pthread_mutex_lock(&list_lock);
 
     time_t passed = header->ts.tv_sec - rates_update;
 
-    cur = update_counts(&head, &hosts_num, ip->daddr, header, PCAP_D_OUT);
-    update_counts(&cur->peers, &cur->peers_num, ip->saddr, header, PCAP_D_IN);
+    h = update_counts(&head, &hosts_num, ip->daddr, header, PCAP_D_OUT);
+    update_counts(&h->peers, &h->peers_num, ip->saddr, header, PCAP_D_IN);
 
     if (passed >= 5) {
 	rates_update = header->ts.tv_sec;
