@@ -297,9 +297,10 @@ static void delete_inactive(struct host **h, int *num, time_t timestamp) {
 static void process_packet_in(u_char *param, const struct pcap_pkthdr *header, const u_char *pkt_data) {
     struct host *cur;
     struct iphdr *ip = (struct iphdr *) (pkt_data + opts.header_len);
-    time_t passed = header->ts.tv_sec - rates_update;
 
     pthread_mutex_lock(&list_lock);
+
+    time_t passed = header->ts.tv_sec - rates_update;
 
     cur = update_counts(&head, &hosts_num, ip->saddr, header, PCAP_D_IN);
     update_counts(&cur->peers, &cur->peers_num, ip->daddr, header, PCAP_D_OUT);
@@ -322,9 +323,10 @@ static void process_packet_in(u_char *param, const struct pcap_pkthdr *header, c
 static void process_packet_out(u_char *param, const struct pcap_pkthdr *header, const u_char *pkt_data) {
     struct host *cur;
     struct iphdr *ip = (struct iphdr *) (pkt_data + opts.header_len);
-    time_t passed = header->ts.tv_sec - rates_update;
 
     pthread_mutex_lock(&list_lock);
+
+    time_t passed = header->ts.tv_sec - rates_update;
 
     cur = update_counts(&head, &hosts_num, ip->daddr, header, PCAP_D_OUT);
     update_counts(&cur->peers, &cur->peers_num, ip->saddr, header, PCAP_D_IN);
