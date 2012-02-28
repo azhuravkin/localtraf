@@ -131,8 +131,6 @@ static struct host *update_counts(struct host **h, int *num, u_int32_t ip, const
     if (ip == 0 || ip == ~0)
 	return NULL;
 
-    pthread_mutex_lock(&list_lock);
-
     /* Search host in list. */
     for (cur = *h; cur; cur = cur->next) {
 	if (cur->ip_big == ip) {
@@ -148,9 +146,6 @@ static struct host *update_counts(struct host **h, int *num, u_int32_t ip, const
 		    cur->in_packets++;
 		    break;
 	    }
-
-	    pthread_mutex_unlock(&list_lock);
-
 	    return cur;
 	}
 	prev = cur;
@@ -186,8 +181,6 @@ static struct host *update_counts(struct host **h, int *num, u_int32_t ip, const
     (*num)++;
 
     sort(h, *num);
-
-    pthread_mutex_unlock(&list_lock);
 
     return cur;
 }
@@ -306,19 +299,19 @@ static void process_packet_in(u_char *param, const struct pcap_pkthdr *header, c
     struct iphdr *ip = (struct iphdr *) (pkt_data + opts.header_len);
     time_t passed = header->ts.tv_sec - rates_update;
 
+    pthread_mutex_lock(&list_lock);
+
     cur = update_counts(&head, &hosts_num, ip->saddr, header, PCAP_D_IN);
     update_counts(&cur->peers, &cur->peers_num, ip->daddr, header, PCAP_D_OUT);
 
     if (passed >= 5) {
-	pthread_mutex_lock(&list_lock);
-
 	rates_update = header->ts.tv_sec;
 	update_rates(passed);
 	delete_inactive(&head, &hosts_num, rates_update);
 	erase();
-
-	pthread_mutex_unlock(&list_lock);
     }
+
+    pthread_mutex_unlock(&list_lock);
 
     if (!opts.port && timergrow(header->ts, last_update_in, 0.1)) {
 	last_update_in = header->ts;
@@ -331,19 +324,19 @@ static void process_packet_out(u_char *param, const struct pcap_pkthdr *header, 
     struct iphdr *ip = (struct iphdr *) (pkt_data + opts.header_len);
     time_t passed = header->ts.tv_sec - rates_update;
 
+    pthread_mutex_lock(&list_lock);
+
     cur = update_counts(&head, &hosts_num, ip->daddr, header, PCAP_D_OUT);
     update_counts(&cur->peers, &cur->peers_num, ip->saddr, header, PCAP_D_IN);
 
     if (passed >= 5) {
-	pthread_mutex_lock(&list_lock);
-
 	rates_update = header->ts.tv_sec;
 	update_rates(passed);
 	delete_inactive(&head, &hosts_num, rates_update);
 	erase();
-
-	pthread_mutex_unlock(&list_lock);
     }
+
+    pthread_mutex_unlock(&list_lock);
 
     if (!opts.port && timergrow(header->ts, last_update_out, 0.1)) {
 	last_update_out = header->ts;
