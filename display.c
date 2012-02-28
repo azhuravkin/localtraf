@@ -465,6 +465,9 @@ void show_display(void) {
 		if (!opts.resolve)
 		    resolve_all_hosts();
 		opts.resolve = (opts.resolve) ? FALSE : TRUE;
+		pthread_mutex_lock(&list_lock);
+		sort(&head, hosts_num);
+		pthread_mutex_unlock(&list_lock);
 		erase();
 		update_display();
 		break;

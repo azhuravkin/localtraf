@@ -120,7 +120,7 @@ static void *reply(void *arg) {
 	    "<td class='data2'>%sb/s</td>"
 	    "<td class='data2'>%sb/s</td>\n</tr>\n",
 	    ++i,
-	    (cur->ip_ptr[0]) ? cur->ip_ptr : cur->ip_str,
+	    (opts.resolve && cur->ip_ptr[0]) ? cur->ip_ptr : cur->ip_str,
 	    in_packets,
 	    out_packets,
 	    in_bytes,

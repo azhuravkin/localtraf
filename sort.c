@@ -7,12 +7,14 @@ static int ip(const void *p1, const void *p2) {
     const struct host **e1 = (const struct host **) p1;
     const struct host **e2 = (const struct host **) p2;
 
-    if ((*e1)->ip_ptr[0] && (*e2)->ip_ptr[0])
-	return strcmp((*e1)->ip_ptr, (*e2)->ip_ptr);
-    else if ((*e1)->ip_ptr[0])
-	return -1;
-    else if ((*e2)->ip_ptr[0])
-	return 1;
+    if (opts.resolve) {
+	if ((*e1)->ip_ptr[0] && (*e2)->ip_ptr[0])
+	    return strcmp((*e1)->ip_ptr, (*e2)->ip_ptr);
+	else if ((*e1)->ip_ptr[0])
+	    return -1;
+	else if ((*e2)->ip_ptr[0])
+	    return 1;
+    }
 
     if ((*e1)->ip_little < (*e2)->ip_little)
 	return -1;
