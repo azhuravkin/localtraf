@@ -302,8 +302,8 @@ static void process_packet_in(u_char *param, const struct pcap_pkthdr *header, c
 
     time_t passed = header->ts.tv_sec - rates_update;
 
-    h = update_counts(&head, &hosts_num, ip->saddr, header, PCAP_D_IN);
-    update_counts(&h->peers, &h->peers_num, ip->daddr, header, PCAP_D_OUT);
+    if ((h = update_counts(&head, &hosts_num, ip->saddr, header, PCAP_D_IN)))
+	update_counts(&h->peers, &h->peers_num, ip->daddr, header, PCAP_D_OUT);
 
     if (passed >= 5) {
 	rates_update = header->ts.tv_sec;
@@ -328,8 +328,8 @@ static void process_packet_out(u_char *param, const struct pcap_pkthdr *header, 
 
     time_t passed = header->ts.tv_sec - rates_update;
 
-    h = update_counts(&head, &hosts_num, ip->daddr, header, PCAP_D_OUT);
-    update_counts(&h->peers, &h->peers_num, ip->saddr, header, PCAP_D_IN);
+    if ((h = update_counts(&head, &hosts_num, ip->daddr, header, PCAP_D_OUT)))
+	update_counts(&h->peers, &h->peers_num, ip->saddr, header, PCAP_D_IN);
 
     if (passed >= 5) {
 	rates_update = header->ts.tv_sec;
