@@ -26,7 +26,7 @@ static void *reply(void *arg) {
     char *saveptr;
     int refresh = 5;
     int sort_number = '6';
-    int resolve = EOF;
+    int resolve = opts.resolve;
     u_int32_t total_in_packets  = 0;
     u_int32_t total_out_packets = 0;
     u_int32_t total_in_bytes    = 0;
@@ -97,11 +97,8 @@ static void *reply(void *arg) {
 	"<th class='header'><a href=\"?sort=7\">Outgoing Rates</a></th>\n</tr>\n",
 	refresh, opts.interface);
 
-    if (resolve == TRUE || resolve == FALSE) {
-	if (!opts.resolve)
-	    resolve_all_hosts();
-	opts.resolve = resolve;
-    }
+    if (resolve && !opts.resolve)
+	resolve_all_hosts();
 
     pthread_mutex_lock(&list_lock);
 
@@ -128,7 +125,7 @@ static void *reply(void *arg) {
 	    "<td class='data2'>%sb/s</td>"
 	    "<td class='data2'>%sb/s</td>\n</tr>\n",
 	    ++i,
-	    (opts.resolve && cur->ip_ptr[0]) ? cur->ip_ptr : cur->ip_str,
+	    (resolve && cur->ip_ptr[0]) ? cur->ip_ptr : cur->ip_str,
 	    in_packets,
 	    out_packets,
 	    in_bytes,

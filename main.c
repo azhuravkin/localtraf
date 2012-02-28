@@ -19,7 +19,6 @@ static void usage(const char *name) {
 	"  -i, --interface <str>  set \"internal\" interface\n"
 	"  -n, --no-resolve       don't resolve ip addresses\n"
 	"  -p, --port <num>       listen on <num> port\n"
-	"  -r, --resolve          resolve hostnames\n"
 	"Expression:              filter expression; see tcpdump(1) for syntax\n", name);
     exit(EXIT_FAILURE);
 }
