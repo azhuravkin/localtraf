@@ -113,14 +113,16 @@ static void resolve_all_hosts(void) {
     }
 }
 
-static void update_rates(time_t passed) {
+static void update_rates(struct host *h, time_t passed) {
     struct host *cur;
 
-    for (cur = head; cur; cur = cur->next) {
+    for (cur = h; cur; cur = cur->next) {
 	cur->in_rates = ((cur->in_bytes - cur->in_bytes_prev) * 8) / passed;
 	cur->out_rates = ((cur->out_bytes - cur->out_bytes_prev) * 8) / passed;
 	cur->in_bytes_prev = cur->in_bytes;
 	cur->out_bytes_prev = cur->out_bytes;
+
+	update_rates(cur->peers, passed);
     }
 }
 
@@ -307,7 +309,7 @@ static void process_packet_in(u_char *param, const struct pcap_pkthdr *header, c
 
     if (passed >= 5) {
 	rates_update = header->ts.tv_sec;
-	update_rates(passed);
+	update_rates(head, passed);
 	delete_inactive(&head, &hosts_num, rates_update);
 	erase();
     }
@@ -333,7 +335,7 @@ static void process_packet_out(u_char *param, const struct pcap_pkthdr *header, 
 
     if (passed >= 5) {
 	rates_update = header->ts.tv_sec;
-	update_rates(passed);
+	update_rates(head, passed);
 	delete_inactive(&head, &hosts_num, rates_update);
 	erase();
     }
