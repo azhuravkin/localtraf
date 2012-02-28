@@ -86,19 +86,18 @@ static void *reply(void *arg) {
 	"<title>Localtraf on %s</title>\n</head>\n<body>\n"
 	"<table align='center'>\n<tr>\n"
 	"<th></th>"
-	"<th class='header'><a href=\"?sort=1\">IP Address</a></th>"
-	"<th class='header'><a href=\"?sort=2\">Hostname</a></th>"
-	"<th class='header'><a href=\"?sort=3\">Incoming Packets</a></th>"
-	"<th class='header'><a href=\"?sort=4\">Outgoing Packets</a></th>"
-	"<th class='header'><a href=\"?sort=5\">Incoming Bytes</a></th>"
-	"<th class='header'><a href=\"?sort=6\">Outgoing Bytes</a></th>"
-	"<th class='header'><a href=\"?sort=7\">Incoming Rates</a></th>"
-	"<th class='header'><a href=\"?sort=8\">Outgoing Rates</a></th>\n</tr>\n",
+	"<th class='header'><a href=\"?sort=1\">IP Address/Hostname</a></th>"
+	"<th class='header'><a href=\"?sort=2\">Incoming Packets</a></th>"
+	"<th class='header'><a href=\"?sort=3\">Outgoing Packets</a></th>"
+	"<th class='header'><a href=\"?sort=4\">Incoming Bytes</a></th>"
+	"<th class='header'><a href=\"?sort=5\">Outgoing Bytes</a></th>"
+	"<th class='header'><a href=\"?sort=6\">Incoming Rates</a></th>"
+	"<th class='header'><a href=\"?sort=7\">Outgoing Rates</a></th>\n</tr>\n",
 	refresh, opts.interface);
 
     pthread_mutex_lock(&list_lock);
 
-    if (sort_number > '0' && sort_number < '9') {
+    if (sort_number > '0' && sort_number < '8') {
 	sort_num = sort_number;
 	sort(&head, hosts_num);
     }
@@ -114,7 +113,6 @@ static void *reply(void *arg) {
 	len += snprintf(buffer + len, sizeof(buffer) - len,
 	    "<tr>\n<td class='data2'>%d</td>"
 	    "<td class='data1'>%s</td>"
-	    "<td class='data1'>%s</td>"
 	    "<td class='data2'>%s</td>"
 	    "<td class='data2'>%s</td>"
 	    "<td class='data2'>%s</td>"
@@ -122,8 +120,7 @@ static void *reply(void *arg) {
 	    "<td class='data2'>%sb/s</td>"
 	    "<td class='data2'>%sb/s</td>\n</tr>\n",
 	    ++i,
-	    cur->ip_str,
-	    (cur->ip_ptr[0]) ? cur->ip_ptr : "&nbsp;",
+	    (cur->ip_ptr[0]) ? cur->ip_ptr : cur->ip_str,
 	    in_packets,
 	    out_packets,
 	    in_bytes,
@@ -140,7 +137,7 @@ static void *reply(void *arg) {
 
     pthread_mutex_unlock(&list_lock);
 
-    len += snprintf(buffer + len, sizeof(buffer) - len, "<tr>\n<td></td><td></td><td class='data1'>Total:</td>");
+    len += snprintf(buffer + len, sizeof(buffer) - len, "<tr>\n<td></td><td class='data1'>Total:</td>");
 
     div_1000(in_packets, sizeof(in_packets), total_in_packets);
     div_1000(out_packets, sizeof(out_packets), total_out_packets);

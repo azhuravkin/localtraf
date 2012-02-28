@@ -24,7 +24,7 @@ static pthread_t pcap_thr_in;
 static pthread_t pcap_thr_out;
 
 static void sort_window(void) {
-    WINDOW *win = newwin(12, 38, LINES / 2 - 5, COLS / 2 - 19);
+    WINDOW *win = newwin(11, 38, LINES / 2 - 5, COLS / 2 - 19);
     PANEL *panel = new_panel(win);
 
     if (opts.color)
@@ -42,17 +42,15 @@ static void sort_window(void) {
     mvwprintw(win, 7, 4, "5");
     mvwprintw(win, 8, 4, "6");
     mvwprintw(win, 9, 4, "7");
-    mvwprintw(win, 10, 4, "8");
     wattroff(win, COLOR_PAIR(2));
 
-    mvwprintw(win, 3, 5, " - sort by IP Address");
-    mvwprintw(win, 4, 5, " - sort by Hostname");
-    mvwprintw(win, 5, 5, " - sort by Incoming Packets");
-    mvwprintw(win, 6, 5, " - sort by Outgoing Packets");
-    mvwprintw(win, 7, 5, " - sort by Incoming Bytes");
-    mvwprintw(win, 8, 5, " - sort by Outgoing Bytes");
-    mvwprintw(win, 9, 5, " - sort by Incoming Rates");
-    mvwprintw(win, 10, 5, " - sort by Outgoing Rates");
+    mvwprintw(win, 3, 5, " - sort by IP Address/Hostname");
+    mvwprintw(win, 4, 5, " - sort by Incoming Packets");
+    mvwprintw(win, 5, 5, " - sort by Outgoing Packets");
+    mvwprintw(win, 6, 5, " - sort by Incoming Bytes");
+    mvwprintw(win, 7, 5, " - sort by Outgoing Bytes");
+    mvwprintw(win, 8, 5, " - sort by Incoming Rates");
+    mvwprintw(win, 9, 5, " - sort by Outgoing Rates");
 
     update_panels();
     doupdate();
@@ -476,7 +474,7 @@ void show_display(void) {
 		    sort_window();
 		    erase();
 		    update_display();
-		} while (sort_num < '1' || sort_num > '8');
+		} while (sort_num < '1' || sort_num > '7');
 		pthread_mutex_lock(&list_lock);
 		sort(&head, hosts_num);
 		pthread_mutex_unlock(&list_lock);
