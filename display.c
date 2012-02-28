@@ -159,7 +159,7 @@ static struct host *update_counts(struct host **h, int *num, u_int32_t ip, const
     cur->ip_little = ntohl(ip);
     iptostr(cur->ip_str, ip);
 
-    if (opts.resolve)
+    if (opts.resolve && *h == head)
 	resolve_host(cur);
 
     switch (direction) {
