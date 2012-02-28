@@ -26,6 +26,7 @@ static void *reply(void *arg) {
     char *saveptr;
     int refresh = 5;
     int sort_number = '6';
+    int resolve = EOF;
     u_int32_t total_in_packets  = 0;
     u_int32_t total_out_packets = 0;
     u_int32_t total_in_bytes    = 0;
@@ -57,6 +58,7 @@ static void *reply(void *arg) {
 	    if ((params = strchr(url, '?')) && ++params) {
 		for (option = strtok_r(params, "&", &save); option; option = strtok_r(NULL, "&", &save)) {
 		    sscanf(option, "refresh=%d", &refresh);
+		    sscanf(option, "resolve=%d", &resolve);
 		    sscanf(option, "sort=%c", (char *) &sort_number);
 		}
 	    }
@@ -94,6 +96,12 @@ static void *reply(void *arg) {
 	"<th class='header'><a href=\"?sort=6\">Incoming Rates</a></th>"
 	"<th class='header'><a href=\"?sort=7\">Outgoing Rates</a></th>\n</tr>\n",
 	refresh, opts.interface);
+
+    if (resolve == TRUE || resolve == FALSE) {
+	if (!opts.resolve)
+	    resolve_all_hosts();
+	opts.resolve = resolve;
+    }
 
     pthread_mutex_lock(&list_lock);
 

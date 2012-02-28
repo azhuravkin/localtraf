@@ -103,7 +103,7 @@ static void resolve_host(struct host *cur) {
 	snprintf(cur->ip_ptr, sizeof(cur->ip_ptr), "%s", he->h_name);
 }
 
-static void resolve_all_hosts(void) {
+void resolve_all_hosts(void) {
     struct host *cur;
 
     for (cur = head; cur; cur = cur->next) {
