@@ -111,7 +111,7 @@ static void *reply(void *arg) {
 
     if (sort_number > '0' && sort_number < '8') {
 	sort_num = sort_number;
-	sort(&head, hosts_num);
+	sort(&head, hosts_num, resolve);
     }
 
     for (cur = head; cur; cur = cur->next) {

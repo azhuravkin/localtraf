@@ -3,11 +3,13 @@
 #include "display.h"
 #include "sort.h"
 
+static int resolve;
+
 static int ip(const void *p1, const void *p2) {
     const struct host **e1 = (const struct host **) p1;
     const struct host **e2 = (const struct host **) p2;
 
-    if (opts.resolve) {
+    if (resolve) {
 	if ((*e1)->ip_ptr[0] && (*e2)->ip_ptr[0])
 	    return strcmp((*e1)->ip_ptr, (*e2)->ip_ptr);
 	else if ((*e1)->ip_ptr[0])
@@ -99,10 +101,11 @@ static int out_rates(const void *p1, const void *p2) {
 static int (*cmp[])(const void *, const void *) =
     { NULL, ip, in_packets, out_packets, in_bytes, out_bytes, in_rates, out_rates };
 
-void sort(struct host **h, const int num) {
+void sort(struct host **h, const int num, int r) {
     struct host *arr[num];
     struct host *cur;
     int i = 0;
+    resolve = r;
 
     if (num < 2)
 	return;
