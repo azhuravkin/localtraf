@@ -153,14 +153,7 @@ static void *reply(void *arg) {
 	    "<td class='data2'>%s</td>"
 	    "<td class='data2'>%sb/s</td>"
 	    "<td class='data2'>%sb/s</td>\n</tr>\n",
-	    ++i,
-	    url,
-	    in_packets,
-	    out_packets,
-	    in_bytes,
-	    out_bytes,
-	    in_rates,
-	    out_rates);
+	    ++i, url, in_packets, out_packets, in_bytes, out_bytes, in_rates, out_rates);
 	total_in_packets  += cur->in_packets;
 	total_out_packets += cur->out_packets;
 	total_in_bytes    += cur->in_bytes;
@@ -188,12 +181,7 @@ static void *reply(void *arg) {
 	"<td class='data2'>%sb/s</td>"
 	"<td class='data2'>%sb/s</td>\n"
 	"</tr></table>\n</body>\n</html>\n",
-	in_packets,
-	out_packets,
-	in_bytes,
-	out_bytes,
-	in_rates,
-	out_rates);
+	in_packets, out_packets, in_bytes, out_bytes, in_rates, out_rates);
 
     send(*sd, buffer, len, 0);
     close(*sd);
