@@ -22,7 +22,7 @@ static void *reply(void *arg) {
     char in_rates[9];
     char out_rates[9];
     char request[2048];
-    char url[64];
+    char url[128];
     char *p;
     char *saveptr;
     char host[16] = "";
@@ -138,9 +138,15 @@ static void *reply(void *arg) {
 	div_1000(in_rates, sizeof(in_rates), cur->in_rates);
 	div_1000(out_rates, sizeof(out_rates), cur->out_rates);
 
+	if (strlen(host))
+	    snprintf(url, sizeof(url), "%s", (resolve && cur->ip_ptr[0]) ? cur->ip_ptr : cur->ip_str);
+	else
+	    snprintf(url, sizeof(url), "<a href=\"?sort=%c&refresh=%d&resolve=%d&host=%s\">%s</a>",
+		sort_number, refresh, resolve, cur->ip_str, (resolve && cur->ip_ptr[0]) ? cur->ip_ptr : cur->ip_str);
+
 	len += snprintf(buffer + len, sizeof(buffer) - len,
 	    "<tr>\n<td class='data2'>%d</td>"
-	    "<td class='data1'><a href=\"?sort=%c&refresh=%d&resolve=%d&host=%s\">%s</a></td>"
+	    "<td class='data1'>%s</td>"
 	    "<td class='data2'>%s</td>"
 	    "<td class='data2'>%s</td>"
 	    "<td class='data2'>%s</td>"
@@ -148,8 +154,7 @@ static void *reply(void *arg) {
 	    "<td class='data2'>%sb/s</td>"
 	    "<td class='data2'>%sb/s</td>\n</tr>\n",
 	    ++i,
-	    sort_number, refresh, resolve, cur->ip_str,
-	    (resolve && cur->ip_ptr[0]) ? cur->ip_ptr : cur->ip_str,
+	    url,
 	    in_packets,
 	    out_packets,
 	    in_bytes,
