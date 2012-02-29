@@ -88,14 +88,21 @@ static void *reply(void *arg) {
 	"<title>Localtraf on %s</title>\n</head>\n<body>\n"
 	"<table align='center'>\n<tr>\n"
 	"<th></th>"
-	"<th class='header'><a href=\"?sort=1\">IP Address/Hostname</a></th>"
-	"<th class='header'><a href=\"?sort=2\">Incoming Packets</a></th>"
-	"<th class='header'><a href=\"?sort=3\">Outgoing Packets</a></th>"
-	"<th class='header'><a href=\"?sort=4\">Incoming Bytes</a></th>"
-	"<th class='header'><a href=\"?sort=5\">Outgoing Bytes</a></th>"
-	"<th class='header'><a href=\"?sort=6\">Incoming Rates</a></th>"
-	"<th class='header'><a href=\"?sort=7\">Outgoing Rates</a></th>\n</tr>\n",
-	refresh, opts.interface);
+	"<th class='header'><a href=\"?sort=1&refresh=%d&resolve=%d\">IP Address/Hostname</a></th>"
+	"<th class='header'><a href=\"?sort=2&refresh=%d&resolve=%d\">Incoming Packets</a></th>"
+	"<th class='header'><a href=\"?sort=3&refresh=%d&resolve=%d\">Outgoing Packets</a></th>"
+	"<th class='header'><a href=\"?sort=4&refresh=%d&resolve=%d\">Incoming Bytes</a></th>"
+	"<th class='header'><a href=\"?sort=5&refresh=%d&resolve=%d\">Outgoing Bytes</a></th>"
+	"<th class='header'><a href=\"?sort=6&refresh=%d&resolve=%d\">Incoming Rates</a></th>"
+	"<th class='header'><a href=\"?sort=7&refresh=%d&resolve=%d\">Outgoing Rates</a></th>\n</tr>\n",
+	refresh, opts.interface,
+	refresh, resolve,
+	refresh, resolve,
+	refresh, resolve,
+	refresh, resolve,
+	refresh, resolve,
+	refresh, resolve,
+	refresh, resolve);
 
     if (resolve && !opts.resolve)
 	resolve_all_hosts();
