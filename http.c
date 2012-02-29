@@ -13,6 +13,7 @@ static void *reply(void *arg) {
     int len = 0;
     int i = 0;
     struct host *cur;
+    struct host **h;
     char buffer[65536];
     char in_packets[9];
     char out_packets[9];
@@ -28,6 +29,7 @@ static void *reply(void *arg) {
     int refresh = 5;
     int sort_number = '6';
     int resolve = opts.resolve;
+    int n;
     u_int32_t total_in_packets  = 0;
     u_int32_t total_out_packets = 0;
     u_int32_t total_in_bytes    = 0;
@@ -111,12 +113,24 @@ static void *reply(void *arg) {
 
     pthread_mutex_lock(&list_lock);
 
-    if (sort_number > '0' && sort_number < '8') {
-	sort_num = sort_number;
-	sort(&head, hosts_num, resolve);
+    h = &head;
+    n = hosts_num;
+
+    if (strlen(host)) {
+	for (cur = head; cur; cur = cur->next) {
+	    if (!strcmp(cur->ip_str, host)) {
+		h = &cur->peers;
+		n = cur->peers_num;
+	    }
+	}
     }
 
-    for (cur = head; cur; cur = cur->next) {
+    if (sort_number > '0' && sort_number < '8') {
+	sort_num = sort_number;
+	sort(h, n, resolve);
+    }
+
+    for (cur = *h; cur; cur = cur->next) {
 	div_1000(in_packets, sizeof(in_packets), cur->in_packets);
 	div_1000(out_packets, sizeof(out_packets), cur->out_packets);
 	div_1024(in_bytes, sizeof(in_bytes), cur->in_bytes);
@@ -126,7 +140,7 @@ static void *reply(void *arg) {
 
 	len += snprintf(buffer + len, sizeof(buffer) - len,
 	    "<tr>\n<td class='data2'>%d</td>"
-	    "<td class='data1'><a href=\"?sort=%c&refresh=%d&resolve=%d&host=%s\">%s</td>"
+	    "<td class='data1'><a href=\"?sort=%c&refresh=%d&resolve=%d&host=%s\">%s</a></td>"
 	    "<td class='data2'>%s</td>"
 	    "<td class='data2'>%s</td>"
 	    "<td class='data2'>%s</td>"
