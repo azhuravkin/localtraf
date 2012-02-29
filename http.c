@@ -24,6 +24,7 @@ static void *reply(void *arg) {
     char url[64];
     char *p;
     char *saveptr;
+    char host[16] = "";
     int refresh = 5;
     int sort_number = '6';
     int resolve = opts.resolve;
@@ -60,6 +61,7 @@ static void *reply(void *arg) {
 		    sscanf(option, "refresh=%d", &refresh);
 		    sscanf(option, "resolve=%d", &resolve);
 		    sscanf(option, "sort=%c", (char *) &sort_number);
+		    sscanf(option, "host=%15s", host);
 		}
 	    }
 	}
@@ -88,21 +90,21 @@ static void *reply(void *arg) {
 	"<title>Localtraf on %s</title>\n</head>\n<body>\n"
 	"<table align='center'>\n<tr>\n"
 	"<th></th>"
-	"<th class='header'><a href=\"?sort=1&refresh=%d&resolve=%d\">IP Address/Hostname</a></th>"
-	"<th class='header'><a href=\"?sort=2&refresh=%d&resolve=%d\">Incoming Packets</a></th>"
-	"<th class='header'><a href=\"?sort=3&refresh=%d&resolve=%d\">Outgoing Packets</a></th>"
-	"<th class='header'><a href=\"?sort=4&refresh=%d&resolve=%d\">Incoming Bytes</a></th>"
-	"<th class='header'><a href=\"?sort=5&refresh=%d&resolve=%d\">Outgoing Bytes</a></th>"
-	"<th class='header'><a href=\"?sort=6&refresh=%d&resolve=%d\">Incoming Rates</a></th>"
-	"<th class='header'><a href=\"?sort=7&refresh=%d&resolve=%d\">Outgoing Rates</a></th>\n</tr>\n",
+	"<th class='header'><a href=\"?sort=1&refresh=%d&resolve=%d&host=%s\">IP Address/Hostname</a></th>"
+	"<th class='header'><a href=\"?sort=2&refresh=%d&resolve=%d&host=%s\">Incoming Packets</a></th>"
+	"<th class='header'><a href=\"?sort=3&refresh=%d&resolve=%d&host=%s\">Outgoing Packets</a></th>"
+	"<th class='header'><a href=\"?sort=4&refresh=%d&resolve=%d&host=%s\">Incoming Bytes</a></th>"
+	"<th class='header'><a href=\"?sort=5&refresh=%d&resolve=%d&host=%s\">Outgoing Bytes</a></th>"
+	"<th class='header'><a href=\"?sort=6&refresh=%d&resolve=%d&host=%s\">Incoming Rates</a></th>"
+	"<th class='header'><a href=\"?sort=7&refresh=%d&resolve=%d&host=%s\">Outgoing Rates</a></th>\n</tr>\n",
 	refresh, opts.interface,
-	refresh, resolve,
-	refresh, resolve,
-	refresh, resolve,
-	refresh, resolve,
-	refresh, resolve,
-	refresh, resolve,
-	refresh, resolve);
+	refresh, resolve, host,
+	refresh, resolve, host,
+	refresh, resolve, host,
+	refresh, resolve, host,
+	refresh, resolve, host,
+	refresh, resolve, host,
+	refresh, resolve, host);
 
     if (resolve && !opts.resolve)
 	resolve_all_hosts();
@@ -124,7 +126,7 @@ static void *reply(void *arg) {
 
 	len += snprintf(buffer + len, sizeof(buffer) - len,
 	    "<tr>\n<td class='data2'>%d</td>"
-	    "<td class='data1'>%s</td>"
+	    "<td class='data1'><a href=\"?sort=%c&refresh=%d&resolve=%d&host=%s\">%s</td>"
 	    "<td class='data2'>%s</td>"
 	    "<td class='data2'>%s</td>"
 	    "<td class='data2'>%s</td>"
@@ -132,6 +134,7 @@ static void *reply(void *arg) {
 	    "<td class='data2'>%sb/s</td>"
 	    "<td class='data2'>%sb/s</td>\n</tr>\n",
 	    ++i,
+	    sort_number, refresh, resolve, cur->ip_str,
 	    (resolve && cur->ip_ptr[0]) ? cur->ip_ptr : cur->ip_str,
 	    in_packets,
 	    out_packets,
