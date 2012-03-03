@@ -441,7 +441,7 @@ void show_display(void) {
 	start_color();
 	init_pair(1, COLOR_YELLOW, COLOR_BLUE);
 	init_pair(2, COLOR_CYAN, COLOR_BLUE);
-	init_pair(3, COLOR_YELLOW, COLOR_BLACK);
+	init_pair(3, COLOR_YELLOW, COLOR_CYAN);
 	bkgd(COLOR_PAIR(1) | A_BOLD);
     }
 
