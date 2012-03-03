@@ -292,9 +292,10 @@ static void update_display(void) {
     pthread_mutex_unlock(&list_lock);
 }
 
-static void delete_inactive(struct host **h, int *num, time_t timestamp) {
+static int delete_inactive(struct host **h, int *num, time_t timestamp) {
     struct host *cur, *next;
     struct host *prev = NULL;
+    int ret = 0;
 
     for (cur = *h; cur; cur = next) {
 	next = cur->next;
@@ -307,11 +308,14 @@ static void delete_inactive(struct host **h, int *num, time_t timestamp) {
 	    free_list(&cur->peers, &cur->peers_num);
 	    free(cur);
 	    (*num)--;
+	    ret++;
 	} else {
-	    delete_inactive(&cur->peers, &cur->peers_num, timestamp);
+	    ret += delete_inactive(&cur->peers, &cur->peers_num, timestamp);
 	    prev = cur;
 	}
     }
+
+    return ret;
 }
 
 static void process_packet_in(u_char *param, const struct pcap_pkthdr *header, const u_char *pkt_data) {
@@ -328,8 +332,9 @@ static void process_packet_in(u_char *param, const struct pcap_pkthdr *header, c
     if (passed >= 5) {
 	rates_update = header->ts.tv_sec;
 	update_rates(head, passed);
-	delete_inactive(&head, &hosts_num, rates_update);
-	erase();
+
+	if (opts.port && delete_inactive(&head, &hosts_num, rates_update))
+	    erase();
     }
 
     pthread_mutex_unlock(&list_lock);
@@ -354,8 +359,9 @@ static void process_packet_out(u_char *param, const struct pcap_pkthdr *header, 
     if (passed >= 5) {
 	rates_update = header->ts.tv_sec;
 	update_rates(head, passed);
-	delete_inactive(&head, &hosts_num, rates_update);
-	erase();
+
+	if (opts.port && delete_inactive(&head, &hosts_num, rates_update))
+	    erase();
     }
 
     pthread_mutex_unlock(&list_lock);
