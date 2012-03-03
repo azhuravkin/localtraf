@@ -101,7 +101,7 @@ static int out_rates(const void *p1, const void *p2) {
 static int (*cmp[])(const void *, const void *) =
     { NULL, ip, in_packets, out_packets, in_bytes, out_bytes, in_rates, out_rates };
 
-void sort(struct host **h, const int num, const int r) {
+void sort(struct host **h, const int num, const int sort_num, const int r) {
     struct host *arr[num];
     struct host *cur;
     int i = 0;

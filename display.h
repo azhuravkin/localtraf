@@ -32,7 +32,6 @@ struct host {
 extern pthread_mutex_t list_lock;
 extern struct host *head;
 extern int hosts_num;
-extern int sort_num;
 
 void show_display(void);
 void start_daemon(void);

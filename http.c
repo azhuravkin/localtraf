@@ -27,7 +27,7 @@ static void *reply(void *arg) {
     char *saveptr;
     char host[16] = "";
     int refresh = 5;
-    int sort_number = '6';
+    int sort_num = '6';
     int resolve = opts.resolve;
     int n;
     u_int32_t total_in_packets  = 0;
@@ -62,7 +62,7 @@ static void *reply(void *arg) {
 		for (option = strtok_r(params, "&", &save); option; option = strtok_r(NULL, "&", &save)) {
 		    sscanf(option, "refresh=%d", &refresh);
 		    sscanf(option, "resolve=%d", &resolve);
-		    sscanf(option, "sort=%c", (char *) &sort_number);
+		    sscanf(option, "sort=%c", (char *) &sort_num);
 		    sscanf(option, "host=%15s", host);
 		}
 	    }
@@ -125,10 +125,8 @@ static void *reply(void *arg) {
 	}
     }
 
-    if (sort_number > '0' && sort_number < '8') {
-	sort_num = sort_number;
-	sort(h, n, resolve);
-    }
+    if (sort_num > '0' && sort_num < '8')
+	sort(h, n, sort_num, resolve);
 
     for (cur = *h; cur; cur = cur->next) {
 	div_1000(in_packets, sizeof(in_packets), cur->in_packets);
@@ -140,7 +138,7 @@ static void *reply(void *arg) {
 
 	if (*h == head)
 	    snprintf(url, sizeof(url), "<a href=\"?sort=%c&refresh=%d&resolve=%d&host=%s\">%s</a>",
-		sort_number, refresh, resolve, cur->ip_str, (resolve && cur->ip_ptr[0]) ? cur->ip_ptr : cur->ip_str);
+		sort_num, refresh, resolve, cur->ip_str, (resolve && cur->ip_ptr[0]) ? cur->ip_ptr : cur->ip_str);
 	else
 	    snprintf(url, sizeof(url), "%s", (resolve && cur->ip_ptr[0]) ? cur->ip_ptr : cur->ip_str);
 
