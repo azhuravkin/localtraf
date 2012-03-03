@@ -20,6 +20,7 @@ static time_t rates_update;
 static struct timeval last_update_in;
 static struct timeval last_update_out;
 static int skip = 0;
+static int position = 0;
 static pthread_t pcap_thr_in;
 static pthread_t pcap_thr_out;
 
@@ -223,6 +224,9 @@ static void update_display(void) {
 	    div_1000(in_rates, sizeof(in_rates), cur->in_rates);
 	    div_1000(out_rates, sizeof(out_rates), cur->out_rates);
 
+	    if (num == position)
+		attron(COLOR_PAIR(3));
+
 	    mvprintw(line++, 0, "%-*.*s %*s %*s %*s %*s %*sb/s %*sb/s\n",
 		21 + s1, 21 + s1, (opts.resolve && cur->ip_ptr[0]) ? cur->ip_ptr : cur->ip_str,
 		7 + s2, in_packets,
@@ -231,6 +235,9 @@ static void update_display(void) {
 		7 + s2, out_bytes,
 		6 + s3, in_rates,
 		6 + s3, out_rates);
+
+	    if (num == position)
+		attroff(COLOR_PAIR(3));
 	}
 	total_in_packets  += cur->in_packets;
 	total_out_packets += cur->out_packets;
@@ -410,6 +417,7 @@ void show_display(void) {
 	start_color();
 	init_pair(1, COLOR_YELLOW, COLOR_BLUE);
 	init_pair(2, COLOR_CYAN, COLOR_BLUE);
+	init_pair(3, COLOR_YELLOW, COLOR_BLACK);
 	bkgd(COLOR_PAIR(1) | A_BOLD);
     }
 
@@ -426,20 +434,29 @@ void show_display(void) {
 	switch (getch()) {
 	    case ERR:
 		break;
+
 	    case KEY_UP:
-		if (skip > 0) {
+		if (position > 0)
+		    position--;
+
+		if (skip > position)
 		    skip--;
-		    erase();
-		    update_display();
-		}
+
+		erase();
+		update_display();
 		break;
+
 	    case KEY_DOWN:
-		if ((LINES - 5) < (hosts_num - skip)) {
+		if (position < hosts_num - 1)
+		    position++;
+
+		if ((LINES - 5 < hosts_num - skip) && (position > LINES - 6 + skip))
 		    skip++;
-		    erase();
-		    update_display();
-		}
+
+		erase();
+		update_display();
 		break;
+
 	    case KEY_PPAGE:
 		if (skip > 0) {
 		    skip -= LINES - 5;
@@ -449,28 +466,34 @@ void show_display(void) {
 		    update_display();
 		}
 		break;
+
 	    case KEY_NPAGE:
-		if ((LINES - 5) < (hosts_num - skip)) {
+		if (LINES - 5 < hosts_num - skip) {
 		    skip += LINES - 5;
 		    erase();
 		    update_display();
 		}
 		break;
+
 	    case 'q':
 	    case 'Q':
 		run = FALSE;
 		break;
+
 	    case 'r':
 	    case 'R':
 		if (!opts.resolve)
 		    resolve_all_hosts();
 		opts.resolve = (opts.resolve) ? FALSE : TRUE;
+
 		pthread_mutex_lock(&list_lock);
 		sort(&head, hosts_num, sort_num, opts.resolve);
 		pthread_mutex_unlock(&list_lock);
+
 		erase();
 		update_display();
 		break;
+
 	    case 's':
 	    case 'S':
 		do {
@@ -478,11 +501,14 @@ void show_display(void) {
 		    erase();
 		    update_display();
 		} while (sort_num < '1' || sort_num > '7');
+
 		pthread_mutex_lock(&list_lock);
 		sort(&head, hosts_num, sort_num, opts.resolve);
 		pthread_mutex_unlock(&list_lock);
 		update_display();
+
 		break;
+
 	    default:
 		break;
 	}
