@@ -411,6 +411,8 @@ void show_display(void) {
     PANEL *panel;
     int skip_save = 0;
     int position_save = 0;
+    struct host **h = &head;
+    int *n = &hosts_num;
 
     /* Start pcap */
     pcap_init();
@@ -469,10 +471,10 @@ void show_display(void) {
 		break;
 
 	    case KEY_DOWN:
-		if (position < hosts_num - 1)
+		if (position < *n - 1)
 		    position++;
 
-		if ((LINES - 5 < hosts_num - skip) && (position > LINES - 6 + skip))
+		if ((LINES - 5 < *n - skip) && (position > LINES - 6 + skip))
 		    skip++;
 
 		erase();
@@ -490,7 +492,7 @@ void show_display(void) {
 		break;
 
 	    case KEY_NPAGE:
-		if (LINES - 5 < hosts_num - skip) {
+		if (LINES - 5 < *n - skip) {
 		    skip += LINES - 5;
 		    erase();
 		    update_display();
@@ -505,6 +507,8 @@ void show_display(void) {
 		    pthread_mutex_lock(&list_lock);
 
 		    show_list = &head;
+		    h = &head;
+		    n = &hosts_num;
 
 		    pthread_mutex_unlock(&list_lock);
 
@@ -523,7 +527,7 @@ void show_display(void) {
 		opts.resolve = (opts.resolve) ? FALSE : TRUE;
 
 		pthread_mutex_lock(&list_lock);
-		sort(&head, hosts_num, sort_num, opts.resolve);
+		sort(h, *n, sort_num, opts.resolve);
 		pthread_mutex_unlock(&list_lock);
 
 		erase();
@@ -539,7 +543,7 @@ void show_display(void) {
 		} while (sort_num < '1' || sort_num > '7');
 
 		pthread_mutex_lock(&list_lock);
-		sort(&head, hosts_num, sort_num, opts.resolve);
+		sort(h, *n, sort_num, opts.resolve);
 		pthread_mutex_unlock(&list_lock);
 		update_display();
 
@@ -551,6 +555,8 @@ void show_display(void) {
 
 		    selected_host = search_host();
 		    show_list = &selected_host;
+		    h = &selected_host->peers;
+		    n = &selected_host->peers_num;
 
 		    pthread_mutex_unlock(&list_lock);
 
