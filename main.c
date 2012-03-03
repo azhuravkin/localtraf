@@ -14,7 +14,6 @@ static void usage(const char *name) {
     fprintf(stderr,
 	"Usage: %s [Options] [Expression]\n"
 	"Options:\n"
-	"  -c, --no-color         disable color mode\n"
 	"  -h, --help             show this (help) message\n"
 	"  -i, --interface <str>  set \"internal\" interface\n"
 	"  -n, --no-resolve       don't resolve ip addresses\n"
@@ -36,12 +35,10 @@ int main(int argc, char **argv) {
 
     memset(opts.interface, '\0', sizeof(opts.interface));
     sprintf(opts.expression, "ip ");
-    opts.color = TRUE;
     opts.resolve = TRUE;
     opts.port = 0;
 
     struct option longopts[] = {
-	{"no-color",   0, 0, 'c'},
 	{"help",       0, 0, 'h'},
 	{"interface",  1, 0, 'i'},
 	{"no-resolve", 0, 0, 'n'},
@@ -50,11 +47,8 @@ int main(int argc, char **argv) {
     };
 
     /* Parse command line options. */
-    while ((opt = getopt_long(argc, argv, "chi:np:", longopts, NULL)) != EOF) {
+    while ((opt = getopt_long(argc, argv, "hi:np:", longopts, NULL)) != EOF) {
 	switch (opt) {
-	    case 'c':
-		opts.color = FALSE;
-		break;
 	    case 'i':
 		snprintf(opts.interface, sizeof(opts.interface), "%s", optarg);
 		break;

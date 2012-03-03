@@ -41,9 +41,7 @@ static void sort_window(void) {
     WINDOW *win = newwin(11, 38, LINES / 2 - 5, COLS / 2 - 19);
     PANEL *panel = new_panel(win);
 
-    if (opts.color)
-	wbkgdset(win, COLOR_PAIR(1) | A_BOLD);
-
+    wbkgdset(win, COLOR_PAIR(1) | A_BOLD);
     werase(win);
 
     wattron(win, COLOR_PAIR(2));
@@ -437,7 +435,7 @@ void show_display(void) {
     panel = new_panel(stdscr);
 
     /* Start color mode. */
-    if ((opts.color) && has_colors()) {
+    if (has_colors()) {
 	start_color();
 	init_pair(1, COLOR_YELLOW, COLOR_BLUE);
 	init_pair(2, COLOR_CYAN, COLOR_BLUE);
