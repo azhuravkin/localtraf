@@ -408,6 +408,8 @@ void show_display(void) {
     int OLD_LINES = LINES;
     int OLD_COLS = COLS;
     PANEL *panel;
+    int skip_save = 0;
+    int position_save = 0;
 
     /* Start pcap */
     pcap_init();
@@ -505,6 +507,9 @@ void show_display(void) {
 
 		    pthread_mutex_unlock(&list_lock);
 
+		    position = position_save;
+		    skip = skip_save;
+
 		    erase();
 		    update_display();
 		}
@@ -547,6 +552,11 @@ void show_display(void) {
 		    show_list = &selected_host;
 
 		    pthread_mutex_unlock(&list_lock);
+
+		    position_save = position;
+		    position = 0;
+		    skip_save = skip;
+		    skip = 0;
 
 		    erase();
 		    update_display();
