@@ -15,6 +15,8 @@ pthread_mutex_t list_lock = PTHREAD_MUTEX_INITIALIZER;
 struct host *head = NULL;
 int hosts_num = 0;
 
+static struct host **show_list = &head;
+static struct host *selected_host;
 static int sort_num = '6';
 static time_t rates_update;
 static struct timeval last_update_in;
@@ -23,6 +25,17 @@ static int skip = 0;
 static int position = 0;
 static pthread_t pcap_thr_in;
 static pthread_t pcap_thr_out;
+
+static struct host *search_host(void) {
+    struct host *cur;
+    int num;
+
+    for (cur = head, num = 0; cur; cur = cur->next, num++)
+	if (num == position)
+	    return cur->peers;
+
+    return NULL;
+}
 
 static void sort_window(void) {
     WINDOW *win = newwin(11, 38, LINES / 2 - 5, COLS / 2 - 19);
@@ -215,7 +228,7 @@ static void update_display(void) {
 	s1, " ", s2, " ", s2, " ", s2, " ", s2, " ", s3, " ", s3, " ");
     attroff(COLOR_PAIR(2));
 
-    for (cur = head, num = 0; cur; cur = cur->next, num++) {
+    for (cur = *show_list, num = 0; cur; cur = cur->next, num++) {
 	if ((num >= skip) && (num - skip < LINES - 5)) {
 	    div_1000(in_packets, sizeof(in_packets), cur->in_packets);
 	    div_1000(out_packets, sizeof(out_packets), cur->out_packets);
@@ -477,7 +490,18 @@ void show_display(void) {
 
 	    case 'q':
 	    case 'Q':
-		run = FALSE;
+		if (*show_list == head) {
+		    run = FALSE;
+		} else {
+		    pthread_mutex_lock(&list_lock);
+
+		    show_list = &head;
+
+		    pthread_mutex_unlock(&list_lock);
+
+		    erase();
+		    update_display();
+		}
 		break;
 
 	    case 'r':
@@ -507,6 +531,20 @@ void show_display(void) {
 		pthread_mutex_unlock(&list_lock);
 		update_display();
 
+		break;
+
+	    case '\n':
+		if (*show_list == head) {
+		    pthread_mutex_lock(&list_lock);
+
+		    selected_host = search_host();
+		    show_list = &selected_host;
+
+		    pthread_mutex_unlock(&list_lock);
+
+		    erase();
+		    update_display();
+		}
 		break;
 
 	    default:
