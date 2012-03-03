@@ -81,6 +81,7 @@ static void free_list(struct host **h, int *num) {
 
     for (cur = *h; cur; cur = next) {
 	next = cur->next;
+	free_list(&cur->peers, &cur->peers_num);
 	free(cur);
     }
 
