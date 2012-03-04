@@ -140,11 +140,11 @@ static void update_rates(struct host *h, time_t passed) {
 static struct host *update_counts(struct host **h, int *num, u_int32_t ip, const struct pcap_pkthdr *header, int direction) {
     struct host *prev, *cur;
 
-    /* Skip 0.0.0.0 and 255.255.255.255 addresses. */
+    /* Пропускаем адреса 0.0.0.0 и 255.255.255.255. */
     if (ip == 0 || ip == ~0)
 	return NULL;
 
-    /* Search host in list. */
+    /* Ищем запись в списке. */
     for (cur = *h; cur; cur = cur->next) {
 	if (cur->ip_big == ip) {
 	    cur->timestamp = header->ts.tv_sec;
@@ -164,7 +164,7 @@ static struct host *update_counts(struct host **h, int *num, u_int32_t ip, const
 	prev = cur;
     }
 
-    /* Add new host. */
+    /* Добавляем новую запись. */
     cur = malloc(sizeof(struct host));
     memset(cur, 0, sizeof(struct host));
     cur->timestamp = header->ts.tv_sec;
@@ -298,7 +298,7 @@ static int delete_inactive(struct host **h, int *num, time_t timestamp) {
 
     for (cur = *h; cur; cur = next) {
 	next = cur->next;
-	/* Delete hosts which were not updated more than 60 seconds. */
+	/* Удаляем записи, которые не обновлялись больше 60 секунд. */
 	if (cur->timestamp + 60 < timestamp) {
 	    if (prev)
 		prev->next = cur->next;
@@ -412,10 +412,7 @@ void show_display(void) {
     struct host **h = &head;
     int *n = &hosts_num;
 
-    /* Start pcap */
     pcap_init();
-
-    /* Start ncurses mode. */
     initscr();
 
     if ((LINES < 24) || (COLS < 80)) {
@@ -425,16 +422,17 @@ void show_display(void) {
 	exit(EXIT_FAILURE);
     }
 
-    /* Turn off the cursor. */
+    /* Отключаем показ курсора. */
     curs_set(FALSE);
-    /* Disable echo. */
+    /* Не выводим на экран вводимые символы. */
     noecho();
-    /* Enable keypad. */
+    /* Отслеживаем нажимаемые клавиши. */
     keypad(stdscr,TRUE);
-    /* Create panel. */
+    /* Создаём панель из экрана. Нужно для
+       отображения панели поиска поверх основного окна. */
     panel = new_panel(stdscr);
 
-    /* Start color mode. */
+    /* Инициализируем палитру цветов. */
     if (has_colors()) {
 	start_color();
 	init_pair(1, COLOR_YELLOW, COLOR_BLUE);
@@ -443,13 +441,13 @@ void show_display(void) {
 	bkgd(COLOR_PAIR(1) | A_BOLD);
     }
 
-    /* Get current timestamp. */
+    /* Получаем текущий timestamp. */
     gettimeofday(&tv, NULL);
     rates_update = tv.tv_sec;
 
     update_display();
 
-    /* Create pcap_loop threads. */
+    /* Запускаем pcap_loop нити. */
     threads_init();
 
     while (run) {
@@ -458,9 +456,10 @@ void show_display(void) {
 		break;
 
 	    case KEY_UP:
+		/* Если указатель не в самой верхней позиции - поднимаем курсор на 1 позицию. */
 		if (position > 0)
 		    position--;
-
+		/* Если указатель оказался в пропущенных - прокручиваем список вверх на одну запись. */
 		if (skip > position)
 		    skip--;
 
@@ -469,9 +468,11 @@ void show_display(void) {
 		break;
 
 	    case KEY_DOWN:
+		/* Если указатель не в самом низу - опускаем его на одну позицию. */
 		if (position < *n - 1)
 		    position++;
-
+		/* Если конец списка не влезает в экран и указатель опустился ниже
+		   последней строки - прокручиваем список вниз на одну запись. */
 		if ((LINES - 5 < *n - skip) && (position > LINES - 6 + skip))
 		    skip++;
 
@@ -480,15 +481,20 @@ void show_display(void) {
 		break;
 
 	    case KEY_PPAGE:
-		if (skip) {
+		/* Если верхние записи вне экрана. */
+		if (skip > 0) {
+		    /* И если этих записей достаточно для целого экрана. */
 		    if (skip >= LINES - 5)
+			/* Поднимаем указатель на количетсво записей в экране. */
 			position -= LINES - 5;
 		    else
+			/* Иначе поднимаем указатель на количетсво пропущенных записей. */
 			position -= skip;
 		} else
 		    position = 0;
-
+		/* Если верхние записи вне экрана. */
 		if (skip > 0) {
+		    /* Проматываем список на количество записей в экране. */
 		    skip -= LINES - 5;
 		    if (skip < 0)
 			skip = 0;
@@ -499,13 +505,19 @@ void show_display(void) {
 		break;
 
 	    case KEY_NPAGE:
+		/* Перемещаем указатель вниз на количетсво записей в экране. */
 		position += LINES - 5;
+		/* Если указатель стал ниже последней записи. */
 		if (position > *n - 1)
+		    /* Перемещаем его на последнюю запись. */
 		    position = *n - 1;
-
+		/* Если конец списка не влезает в экран. */
 		if (LINES - 5 < *n - skip) {
+		    /* Перематываем список вниз на количество записей в экране. */
 		    skip += LINES - 5;
+		    /* Если список промотался на столько, что нижняя часть экрана не занята. */
 		    if (*n - skip < LINES - 5)
+			/* Проматываем список так, чтобы последняя запись была внизу экрана. */
 			skip -= LINES - 5 - (*n - skip);
 		}
 
@@ -514,7 +526,9 @@ void show_display(void) {
 		break;
 
 	    case KEY_HOME:
+		/* Устанавливаем указатель на первую запись. */
 		position = 0;
+		/* Отображаем список с первой записи. */
 		skip = 0;
 
 		erase();
@@ -522,8 +536,12 @@ void show_display(void) {
 		break;
 
 	    case KEY_END:
+		/* Устанавливаем указатель на последнюю запись. */
 		position = *n - 1;
+		/* Прокручиваем список так, чтобы в экран влезла последняя запись. */
 		skip = *n - (LINES - 5);
+		if (skip < 0)
+		    skip = 0;
 
 		erase();
 		update_display();
@@ -531,9 +549,11 @@ void show_display(void) {
 
 	    case 'q':
 	    case 'Q':
+		/* Если мы в главном списке. */
 		if (*show_list == head) {
 		    run = FALSE;
 		} else {
+		    /* Выход из списка пиров в главный список. */
 		    pthread_mutex_lock(&list_lock);
 
 		    show_list = &head;
@@ -541,7 +561,7 @@ void show_display(void) {
 		    n = &hosts_num;
 
 		    pthread_mutex_unlock(&list_lock);
-
+		    /* Восстанавливаем сохранённую позицию указателя и списка. */
 		    position = position_save;
 		    skip = skip_save;
 
@@ -580,16 +600,17 @@ void show_display(void) {
 		break;
 
 	    case '\n':
+		/* Если мы в главном списке. */
 		if (*show_list == head) {
 		    pthread_mutex_lock(&list_lock);
-
+		    /* Ищем адрес хоста, на который указывает указатель. */
 		    selected_host = search_host();
 		    show_list = &selected_host;
 		    h = &selected_host->peers;
 		    n = &selected_host->peers_num;
 
 		    pthread_mutex_unlock(&list_lock);
-
+		    /* Сохраняем текущую позицию указателя и списка. */
 		    position_save = position;
 		    position = 0;
 		    skip_save = skip;
@@ -604,7 +625,7 @@ void show_display(void) {
 		break;
 	}
 
-	/* Update display if screen is resized. */
+	/* Перерисовываем экран, если размер окна изменился. */
 	if ((LINES != OLD_LINES) || (COLS != OLD_COLS)) {
 	    OLD_LINES = LINES;
 	    OLD_COLS = COLS;
@@ -613,7 +634,7 @@ void show_display(void) {
 	}
     }
 
-    /* Cleanup. */
+    /* Очистка перед выходом. */
     threads_cancel();
     pcap_cancel();
 
@@ -626,17 +647,17 @@ void start_daemon(void) {
 
     pcap_init();
 
-    /* Get current timestamp. */
+    /* Получаем текущий timestamp. */
     gettimeofday(&tv, NULL);
     rates_update = tv.tv_sec;
 
-    /* Create pcap_loop threads. */
+    /* Создаём pcap_loop нити. */
     threads_init();
 
-    /* Start small http server. */
+    /* Запускаем маленький http сервер. */
     start_http();
 
-    /* Cleanup. */
+    /* Очистка перед выходом. */
     threads_cancel();
     pcap_cancel();
 }
