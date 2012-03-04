@@ -480,21 +480,37 @@ void show_display(void) {
 		break;
 
 	    case KEY_PPAGE:
+		if (skip) {
+		    if (skip >= LINES - 5)
+			position -= LINES - 5;
+		    else
+			position -= skip;
+		} else
+		    position = 0;
+
 		if (skip > 0) {
 		    skip -= LINES - 5;
 		    if (skip < 0)
 			skip = 0;
-		    erase();
-		    update_display();
 		}
+
+		erase();
+		update_display();
 		break;
 
 	    case KEY_NPAGE:
+		position += LINES - 5;
+		if (position > *n - 1)
+		    position = *n - 1;
+
 		if (LINES - 5 < *n - skip) {
 		    skip += LINES - 5;
-		    erase();
-		    update_display();
+		    if (*n - skip < LINES - 5)
+			skip -= LINES - 5 - (*n - skip);
 		}
+
+		erase();
+		update_display();
 		break;
 
 	    case 'q':
