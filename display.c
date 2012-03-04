@@ -261,7 +261,7 @@ static void update_display(void) {
 
     attron(COLOR_PAIR(2));
     mvhline(line++, 0, ACS_HLINE, COLS);
-    mvprintw(LINES - 1, 1, "Up/Down/PgUp/PgDn                R          S       Q");
+    mvprintw(LINES - 1, 1, "Up/Down/PgUp/PgDn/Home/End                R          S       Q");
     mvprintw(line++, 0,"%-*s ", 21 + s1, "Total:");
     attroff(COLOR_PAIR(2));
 
@@ -280,10 +280,10 @@ static void update_display(void) {
 	6 + s3, in_rates,
 	6 + s3, out_rates);
 
-    mvprintw(LINES - 1, 18, "-scroll window");
-    mvprintw(LINES - 1, 35, "-resolve");
-    mvprintw(LINES - 1, 46, "-sort");
-    mvprintw(LINES - 1, 54, "-quit");
+    mvprintw(LINES - 1, 27, "-scroll window");
+    mvprintw(LINES - 1, 44, "-resolve");
+    mvprintw(LINES - 1, 55, "-sort");
+    mvprintw(LINES - 1, 63, "-quit");
 
     update_panels();
     doupdate();
@@ -508,6 +508,22 @@ void show_display(void) {
 		    if (*n - skip < LINES - 5)
 			skip -= LINES - 5 - (*n - skip);
 		}
+
+		erase();
+		update_display();
+		break;
+
+	    case KEY_HOME:
+		position = 0;
+		skip = 0;
+
+		erase();
+		update_display();
+		break;
+
+	    case KEY_END:
+		position = *n - 1;
+		skip = *n - (LINES - 5);
 
 		erase();
 		update_display();
