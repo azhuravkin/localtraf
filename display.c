@@ -32,7 +32,7 @@ static struct host *search_host(void) {
 
     for (cur = head, num = 0; cur; cur = cur->next, num++)
 	if (num == position)
-	    return cur->peers;
+	    return cur;
 
     return NULL;
 }
@@ -605,7 +605,7 @@ void show_display(void) {
 		    pthread_mutex_lock(&list_lock);
 		    /* Ищем адрес хоста, на который указывает указатель. */
 		    selected_host = search_host();
-		    show_list = &selected_host;
+		    show_list = &selected_host->peers;
 		    h = &selected_host->peers;
 		    n = &selected_host->peers_num;
 
