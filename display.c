@@ -16,7 +16,7 @@ struct host *head = NULL;
 int hosts_num = 0;
 
 static struct host **show_list = &head;
-static struct host *selected_host;
+static int *show_num = &hosts_num;
 static int sort_num = '6';
 static time_t rates_update;
 static struct timeval last_update_in;
@@ -26,15 +26,15 @@ static int position = 0;
 static pthread_t pcap_thr_in;
 static pthread_t pcap_thr_out;
 
-static struct host *search_host(void) {
+static void search_selected_host(void) {
     struct host *cur;
     int num;
 
     for (cur = head, num = 0; cur; cur = cur->next, num++)
-	if (num == position)
-	    return cur;
-
-    return NULL;
+	if (num == position) {
+	    show_list = &cur->peers;
+	    show_num = &cur->peers_num;
+	}
 }
 
 static void sort_window(void) {
@@ -409,8 +409,6 @@ void show_display(void) {
     PANEL *panel;
     int skip_save = 0;
     int position_save = 0;
-    struct host **h = &head;
-    int *n = &hosts_num;
 
     pcap_init();
     initscr();
@@ -469,11 +467,11 @@ void show_display(void) {
 
 	    case KEY_DOWN:
 		/* Если указатель не в самом низу - опускаем его на одну позицию. */
-		if (position < *n - 1)
+		if (position < *show_num - 1)
 		    position++;
 		/* Если конец списка не влезает в экран и указатель опустился ниже
 		   последней строки - прокручиваем список вниз на одну запись. */
-		if ((LINES - 5 < *n - skip) && (position > LINES - 6 + skip))
+		if ((LINES - 5 < *show_num - skip) && (position > LINES - 6 + skip))
 		    skip++;
 
 		erase();
@@ -508,17 +506,17 @@ void show_display(void) {
 		/* Перемещаем указатель вниз на количетсво записей в экране. */
 		position += LINES - 5;
 		/* Если указатель стал ниже последней записи. */
-		if (position > *n - 1)
+		if (position > *show_num - 1)
 		    /* Перемещаем его на последнюю запись. */
-		    position = *n - 1;
+		    position = *show_num - 1;
 		/* Если конец списка не влезает в экран. */
-		if (LINES - 5 < *n - skip) {
+		if (LINES - 5 < *show_num - skip) {
 		    /* Перематываем список вниз на количество записей в экране. */
 		    skip += LINES - 5;
 		    /* Если список промотался на столько, что нижняя часть экрана не занята. */
-		    if (*n - skip < LINES - 5)
+		    if (*show_num - skip < LINES - 5)
 			/* Проматываем список так, чтобы последняя запись была внизу экрана. */
-			skip -= LINES - 5 - (*n - skip);
+			skip -= LINES - 5 - (*show_num - skip);
 		}
 
 		erase();
@@ -537,9 +535,9 @@ void show_display(void) {
 
 	    case KEY_END:
 		/* Устанавливаем указатель на последнюю запись. */
-		position = *n - 1;
+		position = *show_num - 1;
 		/* Прокручиваем список так, чтобы в экран влезла последняя запись. */
-		skip = *n - (LINES - 5);
+		skip = *show_num - (LINES - 5);
 		if (skip < 0)
 		    skip = 0;
 
@@ -557,8 +555,7 @@ void show_display(void) {
 		    pthread_mutex_lock(&list_lock);
 
 		    show_list = &head;
-		    h = &head;
-		    n = &hosts_num;
+		    show_num = &hosts_num;
 
 		    pthread_mutex_unlock(&list_lock);
 		    /* Восстанавливаем сохранённую позицию указателя и списка. */
@@ -577,7 +574,7 @@ void show_display(void) {
 		opts.resolve = (opts.resolve) ? FALSE : TRUE;
 
 		pthread_mutex_lock(&list_lock);
-		sort(h, *n, sort_num, opts.resolve);
+		sort(show_list, *show_num, sort_num, opts.resolve);
 		pthread_mutex_unlock(&list_lock);
 
 		erase();
@@ -593,7 +590,7 @@ void show_display(void) {
 		} while (sort_num < '1' || sort_num > '7');
 
 		pthread_mutex_lock(&list_lock);
-		sort(h, *n, sort_num, opts.resolve);
+		sort(show_list, *show_num, sort_num, opts.resolve);
 		pthread_mutex_unlock(&list_lock);
 		update_display();
 
@@ -604,10 +601,7 @@ void show_display(void) {
 		if (*show_list == head) {
 		    pthread_mutex_lock(&list_lock);
 		    /* Ищем адрес хоста, на который указывает указатель. */
-		    selected_host = search_host();
-		    show_list = &selected_host->peers;
-		    h = &selected_host->peers;
-		    n = &selected_host->peers_num;
+		    search_selected_host();
 
 		    pthread_mutex_unlock(&list_lock);
 		    /* Сохраняем текущую позицию указателя и списка. */
