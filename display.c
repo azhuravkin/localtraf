@@ -332,7 +332,7 @@ static void process_packet_in(u_char *param, const struct pcap_pkthdr *header, c
 	rates_update = header->ts.tv_sec;
 	update_rates(head, passed);
 
-	if (delete_inactive(&head, &hosts_num, rates_update) && !opts.port)
+	if (delete_inactive(show_list, show_num, rates_update) && !opts.port)
 	    erase();
     }
 
@@ -359,7 +359,7 @@ static void process_packet_out(u_char *param, const struct pcap_pkthdr *header, 
 	rates_update = header->ts.tv_sec;
 	update_rates(head, passed);
 
-	if (delete_inactive(&head, &hosts_num, rates_update) && !opts.port)
+	if (delete_inactive(show_list, show_num, rates_update) && !opts.port)
 	    erase();
     }
 
