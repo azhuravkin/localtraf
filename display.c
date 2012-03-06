@@ -623,6 +623,8 @@ void show_display(void) {
 	if ((LINES != OLD_LINES) || (COLS != OLD_COLS)) {
 	    OLD_LINES = LINES;
 	    OLD_COLS = COLS;
+	    position = 0;
+	    skip = 0;
 	    erase();
 	    update_display();
 	}
