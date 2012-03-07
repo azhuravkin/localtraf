@@ -7,6 +7,7 @@
 #include "sort.h"
 #include "http.h"
 #include "pcap.h"
+#include "resolve.h"
 
 static void *reply(void *arg) {
     int *sd = arg;

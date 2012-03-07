@@ -1,7 +1,7 @@
 CC = gcc
 CFLAGS = -Wall -pthread
 LIBS = -lpanel -lncursesw -lpcap
-OBJECTS = main.o display.o pcap.o sort.o http.o
+OBJECTS = main.o display.o pcap.o sort.o http.o resolve.o
 TARGET = localtraf
 
 all: $(TARGET)
@@ -24,6 +24,9 @@ sort.o: Makefile main.h display.h sort.c
 
 http.o: Makefile main.h display.h sort.h http.h pcap.h http.c
 	$(CC) $(CFLAGS) -c http.c
+
+resolve.o: Makefile display.h resolve.h resolve.c
+	$(CC) $(CFLAGS) -c resolve.c
 
 clean:
 	rm -f $(TARGET) $(OBJECTS)

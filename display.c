@@ -1,7 +1,6 @@
 #include <string.h>
 #include <arpa/inet.h>
 #include <linux/if_ether.h>
-#include <netdb.h>
 #include <sys/time.h>
 #include <unistd.h>
 #include <panel.h>
@@ -10,6 +9,7 @@
 #include "display.h"
 #include "sort.h"
 #include "http.h"
+#include "resolve.h"
 
 pthread_mutex_t list_lock = PTHREAD_MUTEX_INITIALIZER;
 struct host *head = NULL;
@@ -107,21 +107,6 @@ static void iptostr(char *dst, u_int32_t ip) {
     addr.s_addr = ip;
 
     sprintf(dst, "%s", inet_ntoa(addr));
-}
-
-static void resolve_host(struct host *cur) {
-    struct hostent *he;
-
-    if (!cur->ip_ptr[0] && (he = gethostbyaddr(&cur->ip_big, 4, AF_INET)))
-	snprintf(cur->ip_ptr, sizeof(cur->ip_ptr), "%s", he->h_name);
-}
-
-void resolve_all_hosts(void) {
-    struct host *cur;
-
-    for (cur = head; cur; cur = cur->next) {
-	resolve_host(cur);
-    }
 }
 
 static void update_rates(struct host *h, time_t passed) {
