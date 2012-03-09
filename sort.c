@@ -4,13 +4,12 @@
 #include "sort.h"
 
 int sort_num = '6';
-static int resolve;
 
 static int ip(const void *p1, const void *p2) {
     const struct host **e1 = (const struct host **) p1;
     const struct host **e2 = (const struct host **) p2;
 
-    if (resolve) {
+    if (opts.resolve) {
 	/* Если у обоих сравниваемых хостов есть ptr записи, и эти ptr записи не являются их ip адресами */
 	if ((*e1)->ip_ptr[0] && (*e2)->ip_ptr[0] &&
 		strcmp((*e1)->ip_ptr, (*e1)->ip_str) && strcmp((*e2)->ip_ptr, (*e2)->ip_str))
@@ -107,11 +106,10 @@ static int out_rates(const void *p1, const void *p2) {
 static int (*cmp[])(const void *, const void *) =
     { NULL, ip, in_packets, out_packets, in_bytes, out_bytes, in_rates, out_rates };
 
-void sort(struct host **h, const int num, const int sort_num, const int r) {
+void sort(struct host **h, const int num, const int sort_num) {
     struct host *arr[num];
     struct host *cur;
     int i = 0;
-    resolve = r;
 
     if (num < 2)
 	return;

@@ -176,7 +176,7 @@ static struct host *update_counts(struct host **h, int *num, u_int32_t ip, const
 
     (*num)++;
 
-    sort(h, *num, sort_num, opts.resolve);
+    sort(h, *num, sort_num);
 
     return cur;
 }
@@ -615,7 +615,7 @@ void show_display(void) {
 		opts.resolve = (opts.resolve) ? FALSE : TRUE;
 
 		pthread_mutex_lock(&list_lock);
-		sort(show_list, *show_num, sort_num, opts.resolve);
+		sort(show_list, *show_num, sort_num);
 		pthread_mutex_unlock(&list_lock);
 		update_display();
 
@@ -630,7 +630,7 @@ void show_display(void) {
 		} while (sort_num < '1' || sort_num > '7');
 
 		pthread_mutex_lock(&list_lock);
-		sort(show_list, *show_num, sort_num, opts.resolve);
+		sort(show_list, *show_num, sort_num);
 		pthread_mutex_unlock(&list_lock);
 		update_display();
 

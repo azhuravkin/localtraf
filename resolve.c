@@ -1,6 +1,7 @@
 #include <netdb.h>
 #include <time.h>
 #include <string.h>
+#include <pthread.h>
 #include "main.h"
 #include "display.h"
 #include "resolve.h"
@@ -55,7 +56,7 @@ void *resolve_thread(void *arg) {
 
 		pthread_mutex_lock(&list_lock);
 
-		sort(&head, hosts_num, sort_num, opts.resolve);
+		sort(&head, hosts_num, sort_num);
 
 		pthread_mutex_unlock(&list_lock);
 

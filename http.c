@@ -127,7 +127,7 @@ static void *reply(void *arg) {
     }
 
     if (sort_num > '0' && sort_num < '8')
-	sort(h, n, sort_num, resolve);
+	sort(h, n, sort_num);
 
     for (cur = *h; cur; cur = cur->next) {
 	div_1000(in_packets, sizeof(in_packets), cur->in_packets);

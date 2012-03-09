@@ -3,6 +3,6 @@
 
 extern int sort_num;
 
-void sort(struct host **, const int, const int, const int);
+void sort(struct host **, const int, const int);
 
 #endif
