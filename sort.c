@@ -3,6 +3,7 @@
 #include "display.h"
 #include "sort.h"
 
+int sort_num = '6';
 static int resolve;
 
 static int ip(const void *p1, const void *p2) {

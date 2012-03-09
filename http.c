@@ -109,8 +109,8 @@ static void *reply(void *arg) {
 	refresh, resolve, host,
 	refresh, resolve, host);
 
-    if (resolve && !opts.resolve)
-	resolve_all_hosts();
+    if (resolve != opts.resolve)
+	resolve = opts.resolve;
 
     pthread_mutex_lock(&list_lock);
 

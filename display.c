@@ -17,7 +17,6 @@ int hosts_num = 0;
 
 static struct host **show_list = &head;
 static int *show_num = &hosts_num;
-static int sort_num = '6';
 static time_t rates_update;
 static struct timeval last_update_in;
 static struct timeval last_update_out;
@@ -25,6 +24,7 @@ static int skip = 0;
 static int position = 0;
 static pthread_t pcap_thr_in;
 static pthread_t pcap_thr_out;
+static pthread_t resolve_thr;
 
 static void search_selected_host(void) {
     struct host *cur;
@@ -156,9 +156,6 @@ static struct host *update_counts(struct host **h, int *num, u_int32_t ip, const
     cur->ip_big = ip;
     cur->ip_little = ntohl(ip);
     iptostr(cur->ip_str, ip);
-
-    if (opts.resolve && *h == head)
-	resolve_host(cur);
 
     switch (direction) {
 	case PCAP_D_IN:
@@ -373,11 +370,14 @@ static void threads_init(void) {
     pthread_detach(pcap_thr_in);
     pthread_create(&pcap_thr_out, NULL, pcap_thread_out, NULL);
     pthread_detach(pcap_thr_out);
+    pthread_create(&resolve_thr, NULL, resolve_thread, NULL);
+    pthread_detach(resolve_thr);
 }
 
 static void threads_cancel(void) {
     pthread_cancel(pcap_thr_in);
     pthread_cancel(pcap_thr_out);
+    pthread_cancel(resolve_thr);
 
     pthread_mutex_lock(&list_lock);
 
@@ -554,16 +554,7 @@ void show_display(void) {
 
 	    case 'r':
 	    case 'R':
-		if (!opts.resolve)
-		    resolve_all_hosts();
 		opts.resolve = (opts.resolve) ? FALSE : TRUE;
-
-		pthread_mutex_lock(&list_lock);
-		sort(show_list, *show_num, sort_num, opts.resolve);
-		pthread_mutex_unlock(&list_lock);
-
-		erase();
-		update_display();
 		break;
 
 	    case 's':
