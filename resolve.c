@@ -8,8 +8,12 @@
 static void resolve_host(struct host *cur) {
     struct hostent *he;
 
-    if (!cur->ip_ptr[0] && (he = gethostbyaddr(&cur->ip_big, 4, AF_INET)))
-	snprintf(cur->ip_ptr, sizeof(cur->ip_ptr), "%s", he->h_name);
+    if (!cur->ip_ptr[0]) {
+	if ((he = gethostbyaddr(&cur->ip_big, 4, AF_INET)))
+	    snprintf(cur->ip_ptr, sizeof(cur->ip_ptr), "%s", he->h_name);
+	else
+	    snprintf(cur->ip_ptr, sizeof(cur->ip_ptr), "%s", cur->ip_str);
+    }
 }
 
 void *resolve_thread(void *arg) {
