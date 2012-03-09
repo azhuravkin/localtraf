@@ -11,11 +11,16 @@ static int ip(const void *p1, const void *p2) {
     const struct host **e2 = (const struct host **) p2;
 
     if (resolve) {
-	if ((*e1)->ip_ptr[0] && (*e2)->ip_ptr[0])
+	/* Если у обоих сравниваемых хостов есть ptr записи, и эти ptr записи не являются их ip адресами */
+	if ((*e1)->ip_ptr[0] && (*e2)->ip_ptr[0] &&
+		strcmp((*e1)->ip_ptr, (*e1)->ip_str) && strcmp((*e2)->ip_ptr, (*e2)->ip_str))
+	    /* Сравниваем ptr записи как строки. */
 	    return strcmp((*e1)->ip_ptr, (*e2)->ip_ptr);
-	else if ((*e1)->ip_ptr[0])
+	/* Иначе, если есть ptr запись первого хоста и она не является его ip адресом */
+	else if ((*e1)->ip_ptr[0] && strcmp((*e1)->ip_ptr, (*e1)->ip_str))
 	    return -1;
-	else if ((*e2)->ip_ptr[0])
+	/* Иначе, если есть ptr запись второго хоста и она не является его ip адресом */
+	else if ((*e2)->ip_ptr[0] && strcmp((*e2)->ip_ptr, (*e2)->ip_str))
 	    return 1;
     }
 
