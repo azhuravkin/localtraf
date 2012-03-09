@@ -33,6 +33,7 @@ extern pthread_mutex_t list_lock;
 extern struct host *head;
 extern int hosts_num;
 
+void update_display(void);
 void show_display(void);
 void start_daemon(void);
 void div_1000(char *, size_t, u_int32_t);

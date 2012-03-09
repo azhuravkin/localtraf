@@ -180,7 +180,7 @@ static struct host *update_counts(struct host **h, int *num, u_int32_t ip, const
     return cur;
 }
 
-static void update_display(void) {
+void update_display(void) {
     struct host *cur;
     int num, line = 0;
     char in_packets[9];

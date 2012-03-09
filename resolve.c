@@ -47,8 +47,15 @@ void *resolve_thread(void *arg) {
 		resolve_list(list, i);
 
 		pthread_mutex_lock(&list_lock);
+
 		sort(&head, hosts_num, sort_num, opts.resolve);
+
 		pthread_mutex_unlock(&list_lock);
+
+		if (!opts.port) {
+		    erase();
+		    update_display();
+		}
 	    }
 	}
     }
