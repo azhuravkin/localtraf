@@ -15,6 +15,7 @@ pthread_mutex_t list_lock = PTHREAD_MUTEX_INITIALIZER;
 struct host *head = NULL;
 int hosts_num = 0;
 
+static pthread_mutex_t position_lock = PTHREAD_MUTEX_INITIALIZER;
 static struct host **show_list = &head;
 static int *show_num = &hosts_num;
 static time_t rates_update;
@@ -314,8 +315,25 @@ static void process_packet_in(u_char *param, const struct pcap_pkthdr *header, c
 	rates_update = header->ts.tv_sec;
 	update_rates(head, passed);
 
-	if (delete_inactive(show_list, show_num, rates_update) && !opts.port)
+	if (delete_inactive(show_list, show_num, rates_update) && !opts.port) {
+	    pthread_mutex_lock(&position_lock);
+
+	    /* Если курсор находится ниже последнего хоста */
+	    if (position > *show_num - 1)
+		/* Устанавливаем его на последний хост */
+		position = *show_num - 1;
+
+	    /* Если список прокручен вверх и не заполнен внизу*/
+	    if (skip && *show_num - skip < LINES - 5) {
+		/* Прокручиваем его вниз до конца экрана */
+		skip -= LINES - 5 - (*show_num - skip);
+		if (skip < 0)
+		    skip = 0;
+	    }
+
+	    pthread_mutex_unlock(&position_lock);
 	    erase();
+	}
     }
 
     pthread_mutex_unlock(&list_lock);
@@ -342,6 +360,22 @@ static void process_packet_out(u_char *param, const struct pcap_pkthdr *header, 
 	update_rates(head, passed);
 
 	if (delete_inactive(show_list, show_num, rates_update) && !opts.port)
+	    pthread_mutex_lock(&position_lock);
+
+	    /* Если курсор находится ниже последнего хоста */
+	    if (position > *show_num - 1)
+		/* Устанавливаем его на последний хост */
+		position = *show_num - 1;
+
+	    /* Если список прокручен вверх и не заполнен внизу*/
+	    if (skip && *show_num - skip < LINES - 5) {
+		/* Прокручиваем его вниз до конца экрана */
+		skip -= LINES - 5 - (*show_num - skip);
+		if (skip < 0)
+		    skip = 0;
+	    }
+
+	    pthread_mutex_unlock(&position_lock);
 	    erase();
     }
 
@@ -439,6 +473,8 @@ void show_display(void) {
 		break;
 
 	    case KEY_UP:
+		pthread_mutex_lock(&position_lock);
+
 		/* Если курсор не в самой верхней позиции - поднимаем курсор на 1 позицию. */
 		if (position > 0)
 		    position--;
@@ -446,11 +482,15 @@ void show_display(void) {
 		if (skip > position)
 		    skip--;
 
+		pthread_mutex_unlock(&position_lock);
+
 		erase();
 		update_display();
 		break;
 
 	    case KEY_DOWN:
+		pthread_mutex_lock(&position_lock);
+
 		/* Если курсор не в самом низу - опускаем его на одну позицию. */
 		if (position < *show_num - 1)
 		    position++;
@@ -459,11 +499,15 @@ void show_display(void) {
 		if ((LINES - 5 < *show_num - skip) && (position > LINES - 6 + skip))
 		    skip++;
 
+		pthread_mutex_unlock(&position_lock);
+
 		erase();
 		update_display();
 		break;
 
 	    case KEY_PPAGE:
+		pthread_mutex_lock(&position_lock);
+
 		/* Если верхние записи вне экрана. */
 		if (skip > 0) {
 		    /* И если этих записей достаточно для целого экрана. */
@@ -483,11 +527,15 @@ void show_display(void) {
 			skip = 0;
 		}
 
+		pthread_mutex_unlock(&position_lock);
+
 		erase();
 		update_display();
 		break;
 
 	    case KEY_NPAGE:
+		pthread_mutex_lock(&position_lock);
+
 		/* Перемещаем курсор вниз на количетсво записей в экране. */
 		position += LINES - 5;
 		/* Если курсор стал ниже последней записи. */
@@ -504,27 +552,37 @@ void show_display(void) {
 			skip -= LINES - 5 - (*show_num - skip);
 		}
 
+		pthread_mutex_unlock(&position_lock);
+
 		erase();
 		update_display();
 		break;
 
 	    case KEY_HOME:
+		pthread_mutex_lock(&position_lock);
+
 		/* Устанавливаем курсор на первую запись. */
 		position = 0;
 		/* Отображаем список с первой записи. */
 		skip = 0;
+
+		pthread_mutex_unlock(&position_lock);
 
 		erase();
 		update_display();
 		break;
 
 	    case KEY_END:
+		pthread_mutex_lock(&position_lock);
+
 		/* Устанавливаем курсор на последнюю запись. */
 		position = *show_num - 1;
 		/* Прокручиваем список так, чтобы в экран влезла последняя запись. */
 		skip = *show_num - (LINES - 5);
 		if (skip < 0)
 		    skip = 0;
+
+		pthread_mutex_unlock(&position_lock);
 
 		erase();
 		update_display();
@@ -586,11 +644,15 @@ void show_display(void) {
 		    search_selected_host();
 
 		    pthread_mutex_unlock(&list_lock);
+
+		    pthread_mutex_lock(&position_lock);
 		    /* Сохраняем текущую позицию курсора и списка. */
 		    position_save = position;
 		    position = 0;
 		    skip_save = skip;
 		    skip = 0;
+
+		    pthread_mutex_unlock(&position_lock);
 
 		    erase();
 		    update_display();
