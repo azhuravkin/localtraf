@@ -110,7 +110,7 @@ static void *reply(void *arg) {
 	refresh, resolve, host);
 
     if (resolve != opts.resolve)
-	resolve = opts.resolve;
+	opts.resolve = resolve;
 
     pthread_mutex_lock(&list_lock);
 
