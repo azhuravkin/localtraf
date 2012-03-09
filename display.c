@@ -555,6 +555,12 @@ void show_display(void) {
 	    case 'r':
 	    case 'R':
 		opts.resolve = (opts.resolve) ? FALSE : TRUE;
+
+		pthread_mutex_lock(&list_lock);
+		sort(show_list, *show_num, sort_num, opts.resolve);
+		pthread_mutex_unlock(&list_lock);
+		update_display();
+
 		break;
 
 	    case 's':
