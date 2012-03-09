@@ -36,8 +36,9 @@ void *resolve_thread(void *arg) {
     t.tv_nsec = 100000000;
 
     while (!nanosleep(&t, NULL)) {
+	pthread_mutex_lock(&list_lock);
+
 	if (opts.resolve)  {
-	    pthread_mutex_lock(&list_lock);
 	    /* Обходим главный список в поиске неразрешённых хостов и сохраняем их адреса. */
 	    for (cur = head, i = 0; cur && i < RESOLVE_LIST_SIZE; cur = cur->next)
 		if (!cur->ip_ptr[0])
@@ -65,7 +66,8 @@ void *resolve_thread(void *arg) {
 		    update_display();
 		}
 	    }
-	}
+	} else
+	    pthread_mutex_unlock(&list_lock);
     }
 
     return NULL;

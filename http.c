@@ -109,10 +109,10 @@ static void *reply(void *arg) {
 	refresh, resolve, host,
 	refresh, resolve, host);
 
+    pthread_mutex_lock(&list_lock);
+
     if (resolve != opts.resolve)
 	opts.resolve = resolve;
-
-    pthread_mutex_lock(&list_lock);
 
     h = &head;
     n = hosts_num;

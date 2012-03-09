@@ -612,13 +612,11 @@ void show_display(void) {
 
 	    case 'r':
 	    case 'R':
-		opts.resolve = (opts.resolve) ? FALSE : TRUE;
-
 		pthread_mutex_lock(&list_lock);
+		opts.resolve = (opts.resolve) ? FALSE : TRUE;
 		sort(show_list, *show_num, sort_num);
 		pthread_mutex_unlock(&list_lock);
 		update_display();
-
 		break;
 
 	    case 's':
@@ -633,7 +631,6 @@ void show_display(void) {
 		sort(show_list, *show_num, sort_num);
 		pthread_mutex_unlock(&list_lock);
 		update_display();
-
 		break;
 
 	    case '\n':
