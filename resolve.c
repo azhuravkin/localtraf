@@ -26,6 +26,7 @@ static void resolve_list(struct host **list, int num) {
 
 void *resolve_thread(void *arg) {
     struct host *cur;
+    struct host *peer;
     struct timespec t;
     struct host *list[RESOLVE_LIST_SIZE];
     int i;
@@ -36,10 +37,16 @@ void *resolve_thread(void *arg) {
     while (!nanosleep(&t, NULL)) {
 	if (opts.resolve)  {
 	    pthread_mutex_lock(&list_lock);
-
+	    /* Обходим главный список в поиске неразрешённых хостов и сохраняем их адреса. */
 	    for (cur = head, i = 0; cur && i < RESOLVE_LIST_SIZE; cur = cur->next)
 		if (!cur->ip_ptr[0])
 		    list[i++] = cur;
+	    /* Если неразрешённых хостов меньше чем RESOLVE_LIST_SIZE, ищем их в списках пиров. */
+	    if (i < RESOLVE_LIST_SIZE)
+		for (cur = head; cur && i < RESOLVE_LIST_SIZE; cur = cur->next)
+		    for (peer = cur->peers; peer && i < RESOLVE_LIST_SIZE; peer = peer->next)
+			if (!peer->ip_ptr[0])
+			    list[i++] = peer;
 
 	    pthread_mutex_unlock(&list_lock);
 
