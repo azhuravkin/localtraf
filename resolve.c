@@ -7,22 +7,16 @@
 #include "resolve.h"
 #include "sort.h"
 
-static void resolve_host(struct host *cur) {
-    struct hostent *he;
-
-    if (!cur->ip_ptr[0]) {
-	if ((he = gethostbyaddr(&cur->ip_big, 4, AF_INET)))
-	    snprintf(cur->ip_ptr, sizeof(cur->ip_ptr), "%s", he->h_name);
-	else
-	    snprintf(cur->ip_ptr, sizeof(cur->ip_ptr), "%s", cur->ip_str);
-    }
-}
-
 static void resolve_list(struct host **list, int num) {
+    struct hostent *he;
     int i;
 
-    for (i = 0; i < num; i++)
-	resolve_host(list[i]);
+    for (i = 0; i < num; i++) {
+	if ((he = gethostbyaddr(&list[i]->ip_big, 4, AF_INET)))
+	    snprintf(list[i]->ip_ptr, sizeof(list[i]->ip_ptr), "%s", he->h_name);
+	else
+	    snprintf(list[i]->ip_ptr, sizeof(list[i]->ip_ptr), "%s", list[i]->ip_str);
+    }
 }
 
 void *resolve_thread(void *arg) {
