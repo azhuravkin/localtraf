@@ -32,6 +32,8 @@ struct host {
 extern pthread_mutex_t list_lock;
 extern struct host *head;
 extern int hosts_num;
+extern struct host **show_list;
+extern int *show_num;
 
 void update_display(void);
 void show_display(void);

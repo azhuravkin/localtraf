@@ -13,11 +13,11 @@
 
 pthread_mutex_t list_lock = PTHREAD_MUTEX_INITIALIZER;
 struct host *head = NULL;
+struct host **show_list = &head;
 int hosts_num = 0;
+int *show_num = &hosts_num;
 
 static pthread_mutex_t position_lock = PTHREAD_MUTEX_INITIALIZER;
-static struct host **show_list = &head;
-static int *show_num = &hosts_num;
 static time_t rates_update;
 static struct timeval last_update_in;
 static struct timeval last_update_out;
