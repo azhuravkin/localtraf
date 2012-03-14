@@ -35,7 +35,7 @@ void *resolve_thread(void *arg) {
     t.tv_sec = 0;
     t.tv_nsec = 100000000;
 
-    while (!nanosleep(&t, NULL)) {
+    while (1) {
 	pthread_mutex_lock(&list_lock);
 
 	if (opts.resolve)  {
@@ -68,6 +68,11 @@ void *resolve_thread(void *arg) {
 	    }
 	} else
 	    pthread_mutex_unlock(&list_lock);
+
+	/* Если набран полный массив RESOLVE_LIST_SIZE неразрешённых хостов,
+	   то nanosleep() не выполняем а сразу переходим к новой итерации. */
+	if (i < RESOLVE_LIST_SIZE)
+	    nanosleep(&t, NULL);
     }
 
     return NULL;
