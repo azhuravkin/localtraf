@@ -315,7 +315,9 @@ static void process_packet_in(u_char *param, const struct pcap_pkthdr *header, c
 	rates_update = header->ts.tv_sec;
 	update_rates(head.main, passed);
 
-	if (delete_inactive(head.show, head.show_num, rates_update) && !opts.port) {
+	delete_inactive(&head.main, &head.main_num, rates_update);
+
+	if (!opts.port) {
 	    pthread_mutex_lock(&position_lock);
 
 	    /* Если курсор находится ниже последнего хоста */
@@ -359,7 +361,9 @@ static void process_packet_out(u_char *param, const struct pcap_pkthdr *header, 
 	rates_update = header->ts.tv_sec;
 	update_rates(head.main, passed);
 
-	if (delete_inactive(head.show, head.show_num, rates_update) && !opts.port)
+	delete_inactive(&head.main, &head.main_num, rates_update);
+
+	if (!opts.port)
 	    pthread_mutex_lock(&position_lock);
 
 	    /* Если курсор находится ниже последнего хоста */
