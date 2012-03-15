@@ -18,13 +18,13 @@ static void resolve_host(struct host *tmp) {
 
     pthread_mutex_lock(&list_lock);
 
-    for (cur = *show_list; cur; cur = cur->next)
+    for (cur = *head.show; cur; cur = cur->next)
 	if (cur->ip_big == tmp->ip_big) {
 	    strcpy(cur->ip_ptr, tmp->ip_ptr);
 	    break;
 	}
 
-    sort(show_list, *show_num, sort_num);
+    sort(head.show, *head.show_num);
 
     pthread_mutex_unlock(&list_lock);
 }
@@ -44,7 +44,7 @@ void *resolve_thread(void *arg) {
 
 	if (opts.resolve)  {
 	    /* Обходим список в поиске неразрешёного хоста и сохраняем его в tmp. */
-	    for (cur = *show_list; cur; cur = cur->next)
+	    for (cur = *head.show; cur; cur = cur->next)
 		if (!cur->ip_ptr[0]) {
 		    tmp = *cur;
 		    break;

@@ -114,11 +114,11 @@ static void *reply(void *arg) {
     if (resolve != opts.resolve)
 	opts.resolve = resolve;
 
-    h = &head;
-    n = hosts_num;
+    h = &head.main;
+    n = head.main_num;
 
     if (strlen(host)) {
-	for (cur = head; cur; cur = cur->next) {
+	for (cur = head.main; cur; cur = cur->next) {
 	    if (!strcmp(cur->ip_str, host)) {
 		h = &cur->peers;
 		n = cur->peers_num;
@@ -126,8 +126,10 @@ static void *reply(void *arg) {
 	}
     }
 
-    if (sort_num > '0' && sort_num < '8')
-	sort(h, n, sort_num);
+    if (sort_num != head.sort_num && sort_num > '0' && sort_num < '8') {
+	head.sort_num = sort_num;
+	sort(h, n);
+    }
 
     for (cur = *h; cur; cur = cur->next) {
 	div_1000(in_packets, sizeof(in_packets), cur->in_packets);
@@ -137,7 +139,7 @@ static void *reply(void *arg) {
 	div_1000(in_rates, sizeof(in_rates), cur->in_rates);
 	div_1000(out_rates, sizeof(out_rates), cur->out_rates);
 
-	if (*h == head)
+	if (*h == head.main)
 	    snprintf(url, sizeof(url), "<a href=\"?sort=%c&refresh=%d&resolve=%d&host=%s\">%s</a>",
 		sort_num, refresh, resolve, cur->ip_str, (resolve && cur->ip_ptr[0]) ? cur->ip_ptr : cur->ip_str);
 	else

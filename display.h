@@ -29,11 +29,16 @@ struct host {
     struct host	*next;
 };
 
+struct header {
+    struct host *main;
+    struct host **show;
+    int main_num;
+    int *show_num;
+    char sort_num;
+};
+
 extern pthread_mutex_t list_lock;
-extern struct host *head;
-extern int hosts_num;
-extern struct host **show_list;
-extern int *show_num;
+extern struct header head;
 
 void update_display(void);
 void show_display(void);

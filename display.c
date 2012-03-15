@@ -12,11 +12,7 @@
 #include "resolve.h"
 
 pthread_mutex_t list_lock = PTHREAD_MUTEX_INITIALIZER;
-struct host *head = NULL;
-struct host **show_list = &head;
-int hosts_num = 0;
-int *show_num = &hosts_num;
-
+struct header head = { NULL, &head.main, 0, &head.main_num, '6' };
 static pthread_mutex_t position_lock = PTHREAD_MUTEX_INITIALIZER;
 static time_t rates_update;
 static struct timeval last_update_in;
@@ -31,10 +27,10 @@ static void search_selected_host(void) {
     struct host *cur;
     int num;
 
-    for (cur = head, num = 0; cur; cur = cur->next, num++)
+    for (cur = head.main, num = 0; cur; cur = cur->next, num++)
 	if (num == position) {
-	    show_list = &cur->peers;
-	    show_num = &cur->peers_num;
+	    head.show = &cur->peers;
+	    head.show_num = &cur->peers_num;
 	}
 }
 
@@ -68,7 +64,7 @@ static void sort_window(void) {
     update_panels();
     doupdate();
 
-    sort_num = wgetch(win);
+    head.sort_num = wgetch(win);
 
     del_panel(panel);
     delwin(win);
@@ -176,7 +172,7 @@ static struct host *update_counts(struct host **h, int *num, u_int32_t ip, const
 
     (*num)++;
 
-    sort(h, *num, sort_num);
+    sort(h, *num);
 
     return cur;
 }
@@ -210,7 +206,7 @@ void update_display(void) {
 	s1, " ", s2, " ", s2, " ", s2, " ", s2, " ", s3, " ", s3, " ");
     attroff(COLOR_PAIR(2));
 
-    for (cur = *show_list, num = 0; cur; cur = cur->next, num++) {
+    for (cur = *head.show, num = 0; cur; cur = cur->next, num++) {
 	if ((num >= skip) && (num - skip < LINES - 5)) {
 	    div_1000(in_packets, sizeof(in_packets), cur->in_packets);
 	    div_1000(out_packets, sizeof(out_packets), cur->out_packets);
@@ -308,25 +304,25 @@ static void process_packet_in(u_char *param, const struct pcap_pkthdr *header, c
 
     time_t passed = header->ts.tv_sec - rates_update;
 
-    if ((h = update_counts(&head, &hosts_num, ip->saddr, header, PCAP_D_IN)))
+    if ((h = update_counts(&head.main, &head.main_num, ip->saddr, header, PCAP_D_IN)))
 	update_counts(&h->peers, &h->peers_num, ip->daddr, header, PCAP_D_OUT);
 
     if (passed >= 5) {
 	rates_update = header->ts.tv_sec;
-	update_rates(head, passed);
+	update_rates(head.main, passed);
 
-	if (delete_inactive(show_list, show_num, rates_update) && !opts.port) {
+	if (delete_inactive(head.show, head.show_num, rates_update) && !opts.port) {
 	    pthread_mutex_lock(&position_lock);
 
 	    /* Если курсор находится ниже последнего хоста */
-	    if (position > *show_num - 1)
+	    if (position > *head.show_num - 1)
 		/* Устанавливаем его на последний хост */
-		position = *show_num - 1;
+		position = *head.show_num - 1;
 
 	    /* Если список прокручен вверх и не заполнен внизу*/
-	    if (skip && *show_num - skip < LINES - 5) {
+	    if (skip && *head.show_num - skip < LINES - 5) {
 		/* Прокручиваем его вниз до конца экрана */
-		skip -= LINES - 5 - (*show_num - skip);
+		skip -= LINES - 5 - (*head.show_num - skip);
 		if (skip < 0)
 		    skip = 0;
 	    }
@@ -352,25 +348,25 @@ static void process_packet_out(u_char *param, const struct pcap_pkthdr *header, 
 
     time_t passed = header->ts.tv_sec - rates_update;
 
-    if ((h = update_counts(&head, &hosts_num, ip->daddr, header, PCAP_D_OUT)))
+    if ((h = update_counts(&head.main, &head.main_num, ip->daddr, header, PCAP_D_OUT)))
 	update_counts(&h->peers, &h->peers_num, ip->saddr, header, PCAP_D_IN);
 
     if (passed >= 5) {
 	rates_update = header->ts.tv_sec;
-	update_rates(head, passed);
+	update_rates(head.main, passed);
 
-	if (delete_inactive(show_list, show_num, rates_update) && !opts.port)
+	if (delete_inactive(head.show, head.show_num, rates_update) && !opts.port)
 	    pthread_mutex_lock(&position_lock);
 
 	    /* Если курсор находится ниже последнего хоста */
-	    if (position > *show_num - 1)
+	    if (position > *head.show_num - 1)
 		/* Устанавливаем его на последний хост */
-		position = *show_num - 1;
+		position = *head.show_num - 1;
 
 	    /* Если список прокручен вверх и не заполнен внизу*/
-	    if (skip && *show_num - skip < LINES - 5) {
+	    if (skip && *head.show_num - skip < LINES - 5) {
 		/* Прокручиваем его вниз до конца экрана */
-		skip -= LINES - 5 - (*show_num - skip);
+		skip -= LINES - 5 - (*head.show_num - skip);
 		if (skip < 0)
 		    skip = 0;
 	    }
@@ -415,7 +411,7 @@ static void threads_cancel(void) {
 
     pthread_mutex_lock(&list_lock);
 
-    free_list(&head, &hosts_num);
+    free_list(&head.main, &head.main_num);
 
     pthread_mutex_unlock(&list_lock);
 }
@@ -492,11 +488,11 @@ void show_display(void) {
 		pthread_mutex_lock(&position_lock);
 
 		/* Если курсор не в самом низу - опускаем его на одну позицию. */
-		if (position < *show_num - 1)
+		if (position < *head.show_num - 1)
 		    position++;
 		/* Если конец списка не влезает в экран и курсор опустился ниже
 		   последней строки - прокручиваем список вниз на одну запись. */
-		if ((LINES - 5 < *show_num - skip) && (position > LINES - 6 + skip))
+		if ((LINES - 5 < *head.show_num - skip) && (position > LINES - 6 + skip))
 		    skip++;
 
 		pthread_mutex_unlock(&position_lock);
@@ -539,17 +535,17 @@ void show_display(void) {
 		/* Перемещаем курсор вниз на количетсво записей в экране. */
 		position += LINES - 5;
 		/* Если курсор стал ниже последней записи. */
-		if (position > *show_num - 1)
+		if (position > *head.show_num - 1)
 		    /* Перемещаем его на последнюю запись. */
-		    position = *show_num - 1;
+		    position = *head.show_num - 1;
 		/* Если конец списка не влезает в экран. */
-		if (LINES - 5 < *show_num - skip) {
+		if (LINES - 5 < *head.show_num - skip) {
 		    /* Перематываем список вниз на количество записей в экране. */
 		    skip += LINES - 5;
 		    /* Если список промотался на столько, что нижняя часть экрана не занята. */
-		    if (*show_num - skip < LINES - 5)
+		    if (*head.show_num - skip < LINES - 5)
 			/* Проматываем список так, чтобы последняя запись была внизу экрана. */
-			skip -= LINES - 5 - (*show_num - skip);
+			skip -= LINES - 5 - (*head.show_num - skip);
 		}
 
 		pthread_mutex_unlock(&position_lock);
@@ -576,9 +572,9 @@ void show_display(void) {
 		pthread_mutex_lock(&position_lock);
 
 		/* Устанавливаем курсор на последнюю запись. */
-		position = *show_num - 1;
+		position = *head.show_num - 1;
 		/* Прокручиваем список так, чтобы в экран влезла последняя запись. */
-		skip = *show_num - (LINES - 5);
+		skip = *head.show_num - (LINES - 5);
 		if (skip < 0)
 		    skip = 0;
 
@@ -591,14 +587,14 @@ void show_display(void) {
 	    case 'q':
 	    case 'Q':
 		/* Если мы в главном списке. */
-		if (*show_list == head) {
+		if (*head.show == head.main) {
 		    run = FALSE;
 		} else {
 		    /* Выход из списка пиров в главный список. */
 		    pthread_mutex_lock(&list_lock);
 
-		    show_list = &head;
-		    show_num = &hosts_num;
+		    head.show = &head.main;
+		    head.show_num = &head.main_num;
 
 		    pthread_mutex_unlock(&list_lock);
 		    /* Восстанавливаем сохранённую позицию курсора и списка. */
@@ -614,7 +610,7 @@ void show_display(void) {
 	    case 'R':
 		pthread_mutex_lock(&list_lock);
 		opts.resolve = (opts.resolve) ? FALSE : TRUE;
-		sort(show_list, *show_num, sort_num);
+		sort(head.show, *head.show_num);
 		pthread_mutex_unlock(&list_lock);
 		update_display();
 		break;
@@ -625,17 +621,17 @@ void show_display(void) {
 		    sort_window();
 		    erase();
 		    update_display();
-		} while (sort_num < '1' || sort_num > '7');
+		} while (head.sort_num < '1' || head.sort_num > '7');
 
 		pthread_mutex_lock(&list_lock);
-		sort(show_list, *show_num, sort_num);
+		sort(head.show, *head.show_num);
 		pthread_mutex_unlock(&list_lock);
 		update_display();
 		break;
 
 	    case '\n':
 		/* Если мы в главном списке. */
-		if (*show_list == head) {
+		if (*head.show == head.main) {
 		    pthread_mutex_lock(&list_lock);
 		    /* Ищем адрес хоста, на который указывает курсор. */
 		    search_selected_host();
