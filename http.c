@@ -14,7 +14,6 @@ static void *reply(void *arg) {
     int len = 0;
     int i = 0;
     struct host *cur;
-    struct host **h;
     char buffer[65536];
     char in_packets[9];
     char out_packets[9];
@@ -30,7 +29,6 @@ static void *reply(void *arg) {
     int refresh = 5;
     char sort_num = '6';
     int resolve = opts.resolve;
-    int n;
     u_int32_t total_in_packets  = 0;
     u_int32_t total_out_packets = 0;
     u_int32_t total_in_bytes    = 0;
@@ -114,24 +112,24 @@ static void *reply(void *arg) {
     if (resolve != opts.resolve)
 	opts.resolve = resolve;
 
-    h = &head.main;
-    n = head.main_num;
-
     if (strlen(host)) {
 	for (cur = head.main; cur; cur = cur->next) {
 	    if (!strcmp(cur->ip_str, host)) {
-		h = &cur->peers;
-		n = cur->peers_num;
+		head.show = &cur->peers;
+		head.show_num = &cur->peers_num;
 	    }
 	}
+    } else {
+	head.show = &head.main;
+	head.show_num = &head.main_num;
     }
 
     if (sort_num != head.sort_num && sort_num > '0' && sort_num < '8') {
 	head.sort_num = sort_num;
-	sort(h, n);
+	sort(head.show, *head.show_num);
     }
 
-    for (cur = *h; cur; cur = cur->next) {
+    for (cur = *head.show; cur; cur = cur->next) {
 	div_1000(in_packets, sizeof(in_packets), cur->in_packets);
 	div_1000(out_packets, sizeof(out_packets), cur->out_packets);
 	div_1024(in_bytes, sizeof(in_bytes), cur->in_bytes);
@@ -139,7 +137,7 @@ static void *reply(void *arg) {
 	div_1000(in_rates, sizeof(in_rates), cur->in_rates);
 	div_1000(out_rates, sizeof(out_rates), cur->out_rates);
 
-	if (*h == head.main)
+	if (*head.show == head.main)
 	    snprintf(url, sizeof(url), "<a href=\"?sort=%c&refresh=%d&resolve=%d&host=%s\">%s</a>",
 		head.sort_num, refresh, resolve, cur->ip_str, (resolve && cur->ip_ptr[0]) ? cur->ip_ptr : cur->ip_str);
 	else
