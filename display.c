@@ -64,7 +64,11 @@ static void sort_window(void) {
     update_panels();
     doupdate();
 
+    pthread_mutex_lock(&list_lock);
+
     head.sort_num = wgetch(win);
+
+    pthread_mutex_unlock(&list_lock);
 
     del_panel(panel);
     delwin(win);
