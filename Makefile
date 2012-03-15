@@ -25,7 +25,7 @@ sort.o: Makefile main.h display.h sort.c
 http.o: Makefile main.h display.h sort.h http.h pcap.h http.c
 	$(CC) $(CFLAGS) -c http.c
 
-resolve.o: Makefile display.h resolve.h resolve.c
+resolve.o: Makefile display.h sort.h resolve.h resolve.c
 	$(CC) $(CFLAGS) -c resolve.c
 
 clean:
