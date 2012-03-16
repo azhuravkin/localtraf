@@ -3,8 +3,6 @@
 #include "display.h"
 #include "sort.h"
 
-int sort_num = '6';
-
 static int ip(const void *p1, const void *p2) {
     const struct host **e1 = (const struct host **) p1;
     const struct host **e2 = (const struct host **) p2;
