@@ -8,7 +8,7 @@
 #include "main.h"
 #include "display.h"
 
-struct options opts;
+struct options opts = { NULL, NULL, { '\0' }, "ip ", TRUE, 0, 0 };
 
 static void usage(const char *name) {
     fprintf(stderr,
@@ -32,11 +32,6 @@ int main(int argc, char **argv) {
     }
 
     setlocale(LC_ALL, "");
-
-    memset(opts.interface, '\0', sizeof(opts.interface));
-    sprintf(opts.expression, "ip ");
-    opts.resolve = TRUE;
-    opts.port = 0;
 
     struct option longopts[] = {
 	{"help",       0, 0, 'h'},
