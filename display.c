@@ -27,11 +27,17 @@ static void search_selected_host(void) {
     struct host *cur;
     int num;
 
+    pthread_mutex_lock(&list_lock);
+    pthread_mutex_lock(&position_lock);
+
     for (cur = head.main, num = 0; cur; cur = cur->next, num++)
 	if (num == position) {
 	    head.show = &cur->peers;
 	    head.show_num = &cur->peers_num;
 	}
+
+    pthread_mutex_unlock(&position_lock);
+    pthread_mutex_unlock(&list_lock);
 }
 
 static void sort_window(void) {
@@ -61,10 +67,10 @@ static void sort_window(void) {
     mvwprintw(win, 8, 5, " - sort by Incoming Rates");
     mvwprintw(win, 9, 5, " - sort by Outgoing Rates");
 
+    pthread_mutex_lock(&list_lock);
+
     update_panels();
     doupdate();
-
-    pthread_mutex_lock(&list_lock);
 
     head.sort_num = wgetch(win);
 
@@ -210,6 +216,8 @@ void update_display(void) {
 	s1, " ", s2, " ", s2, " ", s2, " ", s2, " ", s3, " ", s3, " ");
     attroff(COLOR_PAIR(2));
 
+    pthread_mutex_lock(&position_lock);
+
     for (cur = *head.show, num = 0; cur; cur = cur->next, num++) {
 	if ((num >= skip) && (num - skip < LINES - 5)) {
 	    div_1000(in_packets, sizeof(in_packets), cur->in_packets);
@@ -241,6 +249,8 @@ void update_display(void) {
 	total_in_rates    += cur->in_rates;
 	total_out_rates   += cur->out_rates;
     }
+
+    pthread_mutex_unlock(&position_lock);
 
     attron(COLOR_PAIR(2));
     mvhline(line++, 0, ACS_HLINE, COLS);
@@ -605,9 +615,14 @@ void show_display(void) {
 		    head.show_num = &head.main_num;
 
 		    pthread_mutex_unlock(&list_lock);
+
+		    pthread_mutex_lock(&position_lock);
+
 		    /* Восстанавливаем сохранённую позицию курсора и списка. */
 		    position = position_save;
 		    skip = skip_save;
+
+		    pthread_mutex_unlock(&position_lock);
 
 		    erase();
 		    update_display();
@@ -668,8 +683,14 @@ void show_display(void) {
 	if ((LINES != OLD_LINES) || (COLS != OLD_COLS)) {
 	    OLD_LINES = LINES;
 	    OLD_COLS = COLS;
+
+	    pthread_mutex_lock(&position_lock);
+
 	    position = 0;
 	    skip = 0;
+
+	    pthread_mutex_unlock(&position_lock);
+
 	    erase();
 	    update_display();
 	}
