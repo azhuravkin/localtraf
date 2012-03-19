@@ -16,7 +16,7 @@ static void resolve_host(struct host *tmp) {
     else
 	snprintf(tmp->ip_ptr, sizeof(tmp->ip_ptr), "%s", tmp->ip_str);
 
-    pthread_mutex_lock(&list_lock);
+    pthread_mutex_lock(&head.lock);
 
     for (cur = *head.show; cur; cur = cur->next)
 	if (cur->ip_big == tmp->ip_big) {
@@ -26,7 +26,7 @@ static void resolve_host(struct host *tmp) {
 
     sort(head.show, *head.show_num);
 
-    pthread_mutex_unlock(&list_lock);
+    pthread_mutex_unlock(&head.lock);
 }
 
 void *resolve_thread(void *arg) {
@@ -40,7 +40,7 @@ void *resolve_thread(void *arg) {
     while (1) {
 	memset(&tmp, 0, sizeof(tmp));
 
-	pthread_mutex_lock(&list_lock);
+	pthread_mutex_lock(&head.lock);
 
 	if (opts.resolve)  {
 	    /* Обходим список в поиске неразрешёного хоста и сохраняем его в tmp. */
@@ -50,7 +50,7 @@ void *resolve_thread(void *arg) {
 		    break;
 		}
 
-	    pthread_mutex_unlock(&list_lock);
+	    pthread_mutex_unlock(&head.lock);
 
 	    if (tmp.ip_big) {
 		resolve_host(&tmp);
@@ -61,7 +61,7 @@ void *resolve_thread(void *arg) {
 		}
 	    }
 	} else
-	    pthread_mutex_unlock(&list_lock);
+	    pthread_mutex_unlock(&head.lock);
 
 	/* Если неразрешённых хостов не нашли - засыпаем перед новой итерацией. */
 	if (!tmp.ip_big)

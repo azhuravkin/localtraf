@@ -107,7 +107,7 @@ static void *reply(void *arg) {
 	refresh, resolve, host,
 	refresh, resolve, host);
 
-    pthread_mutex_lock(&list_lock);
+    pthread_mutex_lock(&head.lock);
 
     if (resolve != opts.resolve)
 	opts.resolve = resolve;
@@ -161,7 +161,7 @@ static void *reply(void *arg) {
 	total_out_rates   += cur->out_rates;
     }
 
-    pthread_mutex_unlock(&list_lock);
+    pthread_mutex_unlock(&head.lock);
 
     len += snprintf(buffer + len, sizeof(buffer) - len, "<tr>\n<td></td><td class='data1'>Total:</td>");
 

@@ -11,8 +11,9 @@
 #include "http.h"
 #include "resolve.h"
 
-pthread_mutex_t list_lock = PTHREAD_MUTEX_INITIALIZER;
-struct header head = { NULL, &head.main, 0, &head.main_num, '6' };
+struct header head = {
+    PTHREAD_MUTEX_INITIALIZER, NULL, &head.main, 0, &head.main_num, '6'
+};
 static pthread_mutex_t position_lock = PTHREAD_MUTEX_INITIALIZER;
 static time_t rates_update;
 static struct timeval last_update_in;
@@ -27,7 +28,7 @@ static void search_selected_host(void) {
     struct host *cur;
     int num;
 
-    pthread_mutex_lock(&list_lock);
+    pthread_mutex_lock(&head.lock);
     pthread_mutex_lock(&position_lock);
 
     for (cur = head.main, num = 0; cur; cur = cur->next, num++)
@@ -37,7 +38,7 @@ static void search_selected_host(void) {
 	}
 
     pthread_mutex_unlock(&position_lock);
-    pthread_mutex_unlock(&list_lock);
+    pthread_mutex_unlock(&head.lock);
 }
 
 static void sort_window(void) {
@@ -67,14 +68,14 @@ static void sort_window(void) {
     mvwprintw(win, 8, 5, " - sort by Incoming Rates");
     mvwprintw(win, 9, 5, " - sort by Outgoing Rates");
 
-    pthread_mutex_lock(&list_lock);
+    pthread_mutex_lock(&head.lock);
 
     update_panels();
     doupdate();
 
     head.sort_num = wgetch(win);
 
-    pthread_mutex_unlock(&list_lock);
+    pthread_mutex_unlock(&head.lock);
 
     del_panel(panel);
     delwin(win);
@@ -207,7 +208,7 @@ void update_display(void) {
     int s2 = 12.12 * (COLS - 80) / 100 + 1;
     int s3 = 15.15 * (COLS - 80) / 100 + 1;
 
-    pthread_mutex_lock(&list_lock);
+    pthread_mutex_lock(&head.lock);
 
     attron(COLOR_PAIR(2));
     mvprintw(line++, 0, "IP Address/Hostname  %*s%*sIncoming%*sOutgoing%*sIncoming%*sOutgoing  %*sIncoming  %*sOutgoing",
@@ -281,7 +282,7 @@ void update_display(void) {
     update_panels();
     doupdate();
 
-    pthread_mutex_unlock(&list_lock);
+    pthread_mutex_unlock(&head.lock);
 }
 
 static int delete_inactive(struct host **h, int *num, time_t timestamp) {
@@ -314,7 +315,7 @@ static void process_packet_in(u_char *param, const struct pcap_pkthdr *header, c
     struct host *h;
     struct iphdr *ip = (struct iphdr *) (pkt_data + opts.header_len);
 
-    pthread_mutex_lock(&list_lock);
+    pthread_mutex_lock(&head.lock);
 
     time_t passed = header->ts.tv_sec - rates_update;
 
@@ -348,7 +349,7 @@ static void process_packet_in(u_char *param, const struct pcap_pkthdr *header, c
 	}
     }
 
-    pthread_mutex_unlock(&list_lock);
+    pthread_mutex_unlock(&head.lock);
 
     if (!opts.port && timergrow(header->ts, last_update_in, 0.1)) {
 	last_update_in = header->ts;
@@ -360,7 +361,7 @@ static void process_packet_out(u_char *param, const struct pcap_pkthdr *header, 
     struct host *h;
     struct iphdr *ip = (struct iphdr *) (pkt_data + opts.header_len);
 
-    pthread_mutex_lock(&list_lock);
+    pthread_mutex_lock(&head.lock);
 
     time_t passed = header->ts.tv_sec - rates_update;
 
@@ -393,7 +394,7 @@ static void process_packet_out(u_char *param, const struct pcap_pkthdr *header, 
 	    erase();
     }
 
-    pthread_mutex_unlock(&list_lock);
+    pthread_mutex_unlock(&head.lock);
 
     if (!opts.port && timergrow(header->ts, last_update_out, 0.1)) {
 	last_update_out = header->ts;
@@ -427,11 +428,11 @@ static void threads_cancel(void) {
     pthread_cancel(pcap_thr_out);
     pthread_cancel(resolve_thr);
 
-    pthread_mutex_lock(&list_lock);
+    pthread_mutex_lock(&head.lock);
 
     free_list(&head.main, &head.main_num);
 
-    pthread_mutex_unlock(&list_lock);
+    pthread_mutex_unlock(&head.lock);
 }
 
 void show_display(void) {
@@ -609,12 +610,12 @@ void show_display(void) {
 		    run = FALSE;
 		} else {
 		    /* Выход из списка пиров в главный список. */
-		    pthread_mutex_lock(&list_lock);
+		    pthread_mutex_lock(&head.lock);
 
 		    head.show = &head.main;
 		    head.show_num = &head.main_num;
 
-		    pthread_mutex_unlock(&list_lock);
+		    pthread_mutex_unlock(&head.lock);
 
 		    pthread_mutex_lock(&position_lock);
 
@@ -631,10 +632,10 @@ void show_display(void) {
 
 	    case 'r':
 	    case 'R':
-		pthread_mutex_lock(&list_lock);
+		pthread_mutex_lock(&head.lock);
 		opts.resolve = (opts.resolve) ? FALSE : TRUE;
 		sort(head.show, *head.show_num);
-		pthread_mutex_unlock(&list_lock);
+		pthread_mutex_unlock(&head.lock);
 		update_display();
 		break;
 
@@ -646,9 +647,9 @@ void show_display(void) {
 		    update_display();
 		} while (head.sort_num < '1' || head.sort_num > '7');
 
-		pthread_mutex_lock(&list_lock);
+		pthread_mutex_lock(&head.lock);
 		sort(head.show, *head.show_num);
-		pthread_mutex_unlock(&list_lock);
+		pthread_mutex_unlock(&head.lock);
 		update_display();
 		break;
 

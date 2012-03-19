@@ -30,6 +30,7 @@ struct host {
 };
 
 struct header {
+    pthread_mutex_t lock;
     struct host *main;
     struct host **show;
     int main_num;
