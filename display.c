@@ -655,11 +655,8 @@ void show_display(void) {
 	    case '\n':
 		/* Если мы в главном списке. */
 		if (*head.show == head.main) {
-		    pthread_mutex_lock(&list_lock);
 		    /* Ищем адрес хоста, на который указывает курсор. */
 		    search_selected_host();
-
-		    pthread_mutex_unlock(&list_lock);
 
 		    pthread_mutex_lock(&position_lock);
 		    /* Сохраняем текущую позицию курсора и списка. */
