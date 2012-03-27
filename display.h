@@ -38,7 +38,6 @@ struct header {
     char sort_num;
 };
 
-extern pthread_mutex_t list_lock;
 extern struct header head;
 
 void update_display(void);
