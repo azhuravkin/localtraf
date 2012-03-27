@@ -28,17 +28,11 @@ static void search_selected_host(void) {
     struct host *cur;
     int num;
 
-    pthread_mutex_lock(&head.lock);
-    pthread_mutex_lock(&position_lock);
-
     for (cur = head.main, num = 0; cur; cur = cur->next, num++)
 	if (num == position) {
 	    head.show = &cur->peers;
 	    head.show_num = &cur->peers_num;
 	}
-
-    pthread_mutex_unlock(&position_lock);
-    pthread_mutex_unlock(&head.lock);
 }
 
 static void sort_window(void) {
@@ -656,10 +650,14 @@ void show_display(void) {
 	    case '\n':
 		/* Если мы в главном списке. */
 		if (*head.show == head.main) {
+		    pthread_mutex_lock(&position_lock);
+		    pthread_mutex_lock(&head.lock);
+
 		    /* Ищем адрес хоста, на который указывает курсор. */
 		    search_selected_host();
 
-		    pthread_mutex_lock(&position_lock);
+		    pthread_mutex_unlock(&head.lock);
+
 		    /* Сохраняем текущую позицию курсора и списка. */
 		    position_save = position;
 		    position = 0;
