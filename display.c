@@ -435,8 +435,8 @@ static void threads_cancel(void) {
 void show_display(void) {
     int run = TRUE;
     struct timeval tv;
-    int OLD_LINES = LINES;
-    int OLD_COLS = COLS;
+    int OLD_LINES;
+    int OLD_COLS;
     PANEL *panel;
     int skip_save = 0;
     int position_save = 0;
@@ -450,6 +450,9 @@ void show_display(void) {
 			"of at least 80 columns by 24 lines\n");
 	exit(EXIT_FAILURE);
     }
+
+    OLD_LINES = LINES;
+    OLD_COLS = COLS;
 
     /* Отключаем показ курсора. */
     curs_set(FALSE);
@@ -524,7 +527,7 @@ void show_display(void) {
 		if (skip > 0) {
 		    /* И если этих записей достаточно для целого экрана. */
 		    if (skip >= LINES - 5)
-			/* Поднимаем курсор на количетсво записей в экране. */
+			/* Поднимаем курсор на количество записей в экране. */
 			position -= LINES - 5;
 		    else
 			/* Иначе поднимаем курсор на количетсво пропущенных записей. */
