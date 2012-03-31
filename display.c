@@ -38,6 +38,7 @@ static void search_selected_host(void) {
 static void sort_window(void) {
     WINDOW *win = newwin(11, 38, LINES / 2 - 5, COLS / 2 - 19);
     PANEL *panel = new_panel(win);
+    int sort_num;
 
     wbkgdset(win, COLOR_PAIR(1) | A_BOLD);
     werase(win);
@@ -62,13 +63,14 @@ static void sort_window(void) {
     mvwprintw(win, 8, 5, " - sort by Incoming Rates");
     mvwprintw(win, 9, 5, " - sort by Outgoing Rates");
 
-    pthread_mutex_lock(&head.lock);
-
     update_panels();
     doupdate();
 
-    head.sort_num = wgetch(win);
+    sort_num = wgetch(win);
 
+    pthread_mutex_lock(&head.lock);
+
+    head.sort_num = sort_num;
     sort(head.show, *head.show_num);
 
     pthread_mutex_unlock(&head.lock);
