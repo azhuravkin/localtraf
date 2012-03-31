@@ -227,9 +227,8 @@ void update_display(void) {
 	    if (num == position)
 		attron(COLOR_PAIR(3));
 
-	    mvprintw(line++, 0, "%-*.*s %d %*s %*s %*s %*s %*sb/s %*sb/s\n",
+	    mvprintw(line++, 0, "%-*.*s %*s %*s %*s %*s %*sb/s %*sb/s\n",
 		21 + s1, 21 + s1, (opts.resolve && cur->ip_ptr[0]) ? cur->ip_ptr : cur->ip_str,
-		position,
 		7 + s2, in_packets,
 		7 + s2, out_packets,
 		7 + s2, in_bytes,
