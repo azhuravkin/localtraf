@@ -4,7 +4,6 @@
 #include <sys/socket.h>
 #include "main.h"
 #include "display.h"
-#include "sort.h"
 #include "http.h"
 #include "pcap.h"
 #include "resolve.h"
@@ -124,10 +123,8 @@ static void *reply(void *arg) {
 	head.show_num = &head.main_num;
     }
 
-    if (sort_num != head.sort_num && sort_num > '0' && sort_num < '8') {
+    if (sort_num != head.sort_num && sort_num > '0' && sort_num < '8')
 	head.sort_num = sort_num;
-	sort(head.show, *head.show_num);
-    }
 
     for (cur = *head.show; cur; cur = cur->next) {
 	div_1000(in_packets, sizeof(in_packets), cur->in_packets);

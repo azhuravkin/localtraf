@@ -7,7 +7,6 @@
 #include "main.h"
 #include "pcap.h"
 #include "display.h"
-#include "sort.h"
 #include "http.h"
 #include "resolve.h"
 
@@ -176,8 +175,6 @@ static struct host *update_counts(struct host **h, int *num, u_int32_t ip, const
 	prev->next = cur;
 
     (*num)++;
-
-    sort(h, *num);
 
     return cur;
 }
@@ -626,11 +623,7 @@ void show_display(void) {
 
 	    case 'r':
 	    case 'R':
-		pthread_mutex_lock(&head.lock);
 		opts.resolve = (opts.resolve) ? FALSE : TRUE;
-		sort(head.show, *head.show_num);
-		pthread_mutex_unlock(&head.lock);
-		update_display();
 		break;
 
 	    case 's':
@@ -640,11 +633,6 @@ void show_display(void) {
 		    erase();
 		    update_display();
 		} while (head.sort_num < '1' || head.sort_num > '7');
-
-		pthread_mutex_lock(&head.lock);
-		sort(head.show, *head.show_num);
-		pthread_mutex_unlock(&head.lock);
-		update_display();
 		break;
 
 	    case '\n':

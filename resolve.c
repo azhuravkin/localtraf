@@ -60,8 +60,10 @@ void *resolve_thread(void *arg) {
 		    update_display();
 		}
 	    }
-	} else
+	} else {
+	    sort(head.show, *head.show_num);
 	    pthread_mutex_unlock(&head.lock);
+	}
 
 	/* Если неразрешённых хостов не нашли - засыпаем перед новой итерацией. */
 	if (!tmp.ip_big)
