@@ -13,7 +13,7 @@ localtraf: Makefile $(OBJECTS)
 main.o: Makefile main.h display.h main.c
 	$(CC) $(CFLAGS) -c main.c
 
-display.o: Makefile main.h display.h pcap.h http.h resolve.h display.c
+display.o: Makefile main.h display.h pcap.h sort.h http.h resolve.h display.c
 	$(CC) $(CFLAGS) -c display.c
 
 pcap.o: Makefile main.h display.h pcap.c
