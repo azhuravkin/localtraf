@@ -628,6 +628,7 @@ void show_display(void) {
 	    case 'r':
 	    case 'R':
 		opts.resolve = (opts.resolve) ? FALSE : TRUE;
+		update_display();
 		break;
 
 	    case 's':
