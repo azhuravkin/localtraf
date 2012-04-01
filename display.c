@@ -633,7 +633,10 @@ void show_display(void) {
 
 	    case 'r':
 	    case 'R':
+		pthread_mutex_lock(&head.lock);
 		opts.resolve = (opts.resolve) ? FALSE : TRUE;
+		sort(head.show, *head.show_num);
+		pthread_mutex_unlock(&head.lock);
 		update_display();
 		break;
 
