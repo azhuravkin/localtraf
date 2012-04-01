@@ -181,6 +181,8 @@ static struct host *update_counts(struct host **h, int *num, u_int32_t ip, const
 
     (*num)++;
 
+    sort(h, *num);
+
     return cur;
 }
 
