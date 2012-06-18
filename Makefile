@@ -22,7 +22,7 @@ pcap.o: Makefile main.h display.h pcap.c
 sort.o: Makefile main.h display.h sort.h sort.c
 	$(CC) $(CFLAGS) -c sort.c
 
-http.o: Makefile main.h display.h http.h pcap.h resolve.h http.c
+http.o: Makefile main.h display.h http.h pcap.h resolve.h http.c sort.h
 	$(CC) $(CFLAGS) -c http.c
 
 resolve.o: Makefile main.h display.h sort.h resolve.h resolve.c

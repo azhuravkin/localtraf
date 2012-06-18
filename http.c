@@ -7,6 +7,7 @@
 #include "http.h"
 #include "pcap.h"
 #include "resolve.h"
+#include "sort.h"
 
 static void *reply(void *arg) {
     int *sd = arg;
@@ -123,8 +124,10 @@ static void *reply(void *arg) {
 	head.show_num = &head.main_num;
     }
 
-    if (sort_num != head.sort_num && sort_num > '0' && sort_num < '8')
+    if (sort_num != head.sort_num && sort_num > '0' && sort_num < '8') {
 	head.sort_num = sort_num;
+	sort(head.show, *head.show_num);
+    }
 
     for (cur = *head.show; cur; cur = cur->next) {
 	div_1000(in_packets, sizeof(in_packets), cur->in_packets);
