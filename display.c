@@ -326,6 +326,8 @@ static void process_packet_in(u_char *param, const struct pcap_pkthdr *header, c
 
 	delete_inactive(&head.main, &head.main_num, rates_update);
 
+	sort(head.show, *head.show_num);
+
 	if (!opts.port) {
 	    pthread_mutex_lock(&position_lock);
 
@@ -371,6 +373,8 @@ static void process_packet_out(u_char *param, const struct pcap_pkthdr *header, 
 	update_rates(head.main, passed);
 
 	delete_inactive(&head.main, &head.main_num, rates_update);
+
+	sort(head.show, *head.show_num);
 
 	if (!opts.port)
 	    pthread_mutex_lock(&position_lock);
