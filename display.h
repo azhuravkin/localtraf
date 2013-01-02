@@ -11,31 +11,31 @@
 #include <netinet/ip.h>
 
 struct host {
-    time_t	timestamp;
-    char	ip_str[23];
-    char	ip_ptr[64];
-    u_int32_t	ip_big;
-    u_int32_t	ip_little;
-    u_int32_t	in_packets;
-    u_int32_t	out_packets;
-    u_int32_t	in_bytes;
-    u_int32_t	out_bytes;
-    u_int32_t	in_bytes_prev;
-    u_int32_t	out_bytes_prev;
-    u_int32_t	in_rates;
-    u_int32_t	out_rates;
-    int		peers_num;
-    struct host	*peers;
-    struct host	*next;
+    time_t		timestamp;
+    char		ip_str[23];
+    char		ip_ptr[64];
+    u_int32_t		ip_big;
+    u_int32_t		ip_little;
+    u_int32_t		in_packets;
+    u_int32_t		out_packets;
+    u_int32_t		in_bytes;
+    u_int32_t		out_bytes;
+    u_int32_t		in_bytes_prev;
+    u_int32_t		out_bytes_prev;
+    u_int32_t		in_rates;
+    u_int32_t		out_rates;
+    u_int32_t		peers_num;
+    struct host		*peers;
+    struct host		*next;
 };
 
 struct header {
-    pthread_mutex_t lock;
-    struct host *main;
-    struct host **show;
-    int main_num;
-    int *show_num;
-    char sort_num;
+    pthread_mutex_t	lock;
+    struct host		*main;
+    struct host		**show;
+    u_int32_t		main_num;
+    u_int32_t		*show_num;
+    char		sort_num;
 };
 
 extern struct header head;

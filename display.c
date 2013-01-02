@@ -12,8 +12,14 @@
 #include "resolve.h"
 
 struct header head = {
-    PTHREAD_MUTEX_INITIALIZER, NULL, &head.main, 0, &head.main_num, '6'
+    PTHREAD_MUTEX_INITIALIZER,
+    NULL,
+    &head.main,
+    0,
+    &head.main_num,
+    '6'
 };
+
 static pthread_mutex_t position_lock = PTHREAD_MUTEX_INITIALIZER;
 static time_t rates_update;
 static struct timeval last_update_in;
@@ -80,7 +86,7 @@ static void sort_window(void) {
     erase();
 }
 
-static void free_list(struct host **h, int *num) {
+static void free_list(struct host **h, u_int32_t *num) {
     struct host *cur, *next;
 
     for (cur = *h; cur; cur = next) {
@@ -128,7 +134,7 @@ static void update_rates(struct host *h, time_t passed) {
     }
 }
 
-static struct host *update_counts(struct host **h, int *num, u_int32_t ip, const struct pcap_pkthdr *header, int direction) {
+static struct host *update_counts(struct host **h, u_int32_t *num, u_int32_t ip, const struct pcap_pkthdr *header, int direction) {
     struct host *prev, *cur;
 
     /* Пропускаем адреса 0.0.0.0 и 255.255.255.255. */
@@ -283,7 +289,7 @@ void update_display(void) {
     pthread_mutex_unlock(&head.lock);
 }
 
-static int delete_inactive(struct host **h, int *num, time_t timestamp) {
+static int delete_inactive(struct host **h, u_int32_t *num, time_t timestamp) {
     struct host *cur, *next;
     struct host *prev = NULL;
     int ret = 0;
