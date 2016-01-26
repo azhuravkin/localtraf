@@ -115,7 +115,13 @@ void sort(struct host **h, const int num) {
     for (cur = *h; cur; cur = cur->next)
 	arr[i++] = cur;
 
-    qsort(arr, num, sizeof(struct host *), cmp[head.sort_num - 48]); /* convert char number to int */
+    /* convert char number to int */
+    sort_num = head.sort_num - 48;
+
+    if (sort_num < 1 || sort_num > 7)
+        return;
+
+    qsort(arr, num, sizeof(struct host *), cmp[sort_num]);
 
     *h = arr[0];
 
